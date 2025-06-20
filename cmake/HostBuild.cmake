@@ -467,12 +467,6 @@ function(add_host_executable TARGET)
   separate_host_scoped_arguments("${BUILD_LINK_LIBRARIES}" BUILD_LINK_LIBRARIES BUILD_INTERFACE_LINK_LIBRARIES)
   get_host_target_names(BUILD_LINK_LIBRARIES "${BUILD_LINK_LIBRARIES}")
 
-  # Get interface properties of linking libraries
-  unset(_extra_include_directories)
-  unset(_extra_compile_options)
-  unset(_extra_link_options)
-  unset(_extra_dependencies)
-
   # Ensure only host libraries are given
   set(remaining ${BUILD_LINK_LIBRARIES})
   list(FILTER remaining EXCLUDE REGEX "^${CMAKE_HOST_TARGET_PREFIX}.*$")
@@ -480,6 +474,12 @@ function(add_host_executable TARGET)
   if(remaining)
     host_logging_error("add_host_executable LINK_LIBRARIES requires the name of host libraries starting with the host namespace prefix.\nUnsupported libraries: ${remaining}")
   endif()
+
+  # Get interface properties of linking libraries
+  unset(_extra_include_directories)
+  unset(_extra_compile_options)
+  unset(_extra_link_options)
+  unset(_extra_dependencies)
 
   foreach(_lib IN LISTS BUILD_LINK_LIBRARIES)
     list(APPEND _extra_include_directories "$<$<BOOL:$<TARGET_PROPERTY:${_lib},HOST_INTERFACE_INCLUDE_DIRECTORIES>>:${include_flag}>$<JOIN:$<TARGET_PROPERTY:${_lib},HOST_INTERFACE_INCLUDE_DIRECTORIES>,$<SEMICOLON>${include_flag}>")
