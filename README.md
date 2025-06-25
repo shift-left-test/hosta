@@ -72,6 +72,7 @@ add_host_executable(<target>
   [LINK_OPTIONS <PRIVATE|PUBLIC> <link_option>...]
   [LINK_LIBRARIES <PRIVATE|PUBLIC> <library>...]
   [DEPENDS <depend>...]
+  [EXCLUDE_FROM_ALL]
 )
 
 # Parameters:
@@ -82,6 +83,7 @@ add_host_executable(<target>
 # - link_options: List of link options
 # - libraries: List of host libraries
 # - depends: List of dependencies
+# - EXCLUDE_FROM_ALL: Do not include the binary in the default build target
 
 # Scope:
 # - Arguments following both PRIVATE and PUBLIC are used to build the current target.
@@ -99,6 +101,7 @@ add_host_library(<target> <type>
   [LINK_OPTIONS <PRIVATE|PUBLIC> <link_option>...]
   [LINK_LIBRARIES <PRIVATE|PUBLIC> <library>...]
   [DEPENDS <depend>...]
+  [EXCLUDE_FROM_ALL]
 )
 
 # Parameters:
@@ -110,6 +113,7 @@ add_host_library(<target> <type>
 # - link_options: List of link options
 # - libraries: List of host libraries
 # - depends: List of dependencies
+# - EXCLUDE_FROM_ALL: Do not include the binary in the default build target
 
 # Scope:
 # - Arguments following both PRIVATE and PUBLIC are used to build the current target.

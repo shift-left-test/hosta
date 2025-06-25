@@ -441,8 +441,9 @@ function(do_host_link lang TARGET OUTPUT)
 endfunction(do_host_link)
 
 function(add_host_executable TARGET)
+  set(options EXCLUDE_FROM_ALL)
   set(multiValueArgs SOURCES INCLUDE_DIRECTORIES COMPILE_OPTIONS LINK_OPTIONS LINK_LIBRARIES DEPENDS)
-  cmake_parse_arguments(BUILD "" "" "${multiValueArgs}" ${ARGN})
+  cmake_parse_arguments(BUILD "${options}" "" "${multiValueArgs}" ${ARGN})
 
   # Remove host namespace prefix if exists
   remove_host_namespace_prefix(TARGET "${TARGET}")
@@ -539,7 +540,10 @@ function(add_host_executable TARGET)
   )
 
   add_host_custom_target("${CMAKE_HOST_NAMESPACE_PREFIX}${TARGET}" DEPENDS "${_output}")
-  add_host_dependencies("${CMAKE_HOST_BUILD_TARGET}" "${CMAKE_HOST_NAMESPACE_PREFIX}${TARGET}")
+
+  if(NOT BUILD_EXCLUDE_FROM_ALL)
+    add_host_dependencies("${CMAKE_HOST_BUILD_TARGET}" "${CMAKE_HOST_NAMESPACE_PREFIX}${TARGET}")
+  endif()
 
   set_host_target_properties(${CMAKE_HOST_NAMESPACE_PREFIX}${TARGET}
     NAME "${TARGET}"
@@ -550,8 +554,9 @@ function(add_host_executable TARGET)
 endfunction(add_host_executable)
 
 function(add_host_library TARGET TYPE)
+  set(options EXCLUDE_FROM_ALL)
   set(multiValueArgs SOURCES INCLUDE_DIRECTORIES COMPILE_OPTIONS LINK_OPTIONS LINK_LIBRARIES DEPENDS)
-  cmake_parse_arguments(BUILD "" "" "${multiValueArgs}" ${ARGN})
+  cmake_parse_arguments(BUILD "${options}" "" "${multiValueArgs}" ${ARGN})
 
   # Remove host namespace prefix if exists
   remove_host_namespace_prefix(TARGET "${TARGET}")
@@ -680,7 +685,9 @@ function(add_host_library TARGET TYPE)
     host_logging_error("Unsupported library type: ${TYPE}")
   endif()
 
-  add_host_dependencies("${CMAKE_HOST_BUILD_TARGET}" "${CMAKE_HOST_NAMESPACE_PREFIX}${TARGET}")
+  if(NOT BUILD_EXCLUDE_FROM_ALL)
+    add_host_dependencies("${CMAKE_HOST_BUILD_TARGET}" "${CMAKE_HOST_NAMESPACE_PREFIX}${TARGET}")
+  endif()
 
   set_host_target_properties(${CMAKE_HOST_NAMESPACE_PREFIX}${TARGET}
     NAME "${TARGET}"

@@ -368,3 +368,29 @@ def test_cmake_host_include_path(testing):
     testing.configure_internal().check_returncode()
     stdout = testing.cmake("host-targets", verbose=True).stdout
     assert '-I/include/first -I/include/second' in stdout
+
+def test_execlude_from_all_target(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.16)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello STATIC SOURCES "hello.c" EXCLUDE_FROM_ALL)
+    '''
+    testing.write("CMakeLists.txt", content)
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.configure_internal().check_returncode()
+    assert 'Nothing to be done' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_build_excluded_target_by_dependency(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.16)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello STATIC SOURCES "hello.c" LINK_LIBRARIES PRIVATE Host::world)
+    add_host_library(world STATIC SOURCES "world.c" EXCLUDE_FROM_ALL)
+    '''
+    testing.write("CMakeLists.txt", content)
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("world.c", "int world() { return 0; }")
+    testing.configure_internal().check_returncode()
+    assert 'Linking HOSTC static library libworld.a' in testing.cmake("host-targets", verbose=True).stdout
