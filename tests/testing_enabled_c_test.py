@@ -226,7 +226,7 @@ def test_unity_fixture_add_host_tests_with_ignored_test(testing, cross_toolchain
 @PARAM_CROSS_TOOLCHAIN
 @PARAM_GENERATORS
 @PARAM_C_COMPILERS
-def test_unity_fixture_add_host_tests_with_unused_test(testing, cross_toolchain, generator, c_compiler_list):
+def test_unity_fixture_add_host_tests_with_skipped_test(testing, cross_toolchain, generator, c_compiler_list):
     testing.configure(cross_toolchain=cross_toolchain, generator=generator, c_compiler_list=c_compiler_list)
     testing.cmake("host-targets").check_returncode()
     if c_compiler_list not in ["i686-w64-mingw32-gcc"]:

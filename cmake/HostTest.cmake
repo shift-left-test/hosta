@@ -64,10 +64,35 @@ function(unity_fixture_add_host_tests TARGET)
 
   # Add tests with CTest by scanning source code for Unity test macros
   set(unity_test_name_regex ".*\\([ \r\n\t]*([A-Za-z_0-9]+)[ \r\n\t]*,[ \r\n\t]*([A-Za-z_0-9]+)[ \r\n\t]*\\).*")
-  set(unity_test_type_regex "([^A-Za-z_0-9](IGNORE_)?TEST)")
+  set(unity_test_ignored_regex "([^A-Za-z_0-9]IGNORE_TEST)")
+  set(unity_test_type_regex "([^A-Za-z_0-9]RUN_TEST_CASE)")
 
+  # Find the list of ignored tests
+  set(ignored_tests)
   foreach(source IN LISTS sources)
     file(READ "${source}" contents)
+
+    # Remove comments
+    string(REGEX REPLACE "//[^\r\n]*" "" contents "${contents}")
+    string(REGEX REPLACE "/\\*([^*]|\\*+[^*/])*\\*/" "" contents "${contents}")
+
+    string(REGEX MATCHALL "${unity_test_ignored_regex}[ \r\n\t]*\\(([A-Za-z_0-9 ,\r\n\t]+)\\)" found_tests "${contents}")
+    foreach(hit ${found_tests})
+      string(STRIP ${hit} hit)
+      string(REGEX REPLACE ${unity_test_name_regex} "\\1.\\2" unity_test_name ${hit})
+      list(APPEND ignored_tests ${unity_test_name})
+    endforeach()
+  endforeach()
+
+  # Find the list of runnable tests
+  set(added_tests)
+  foreach(source IN LISTS sources)
+    file(READ "${source}" contents)
+
+    # Remove comments
+    string(REGEX REPLACE "//[^\r\n]*" "" contents "${contents}")
+    string(REGEX REPLACE "/\\*([^*]|\\*+[^*/])*\\*/" "" contents "${contents}")
+
     string(REGEX MATCHALL "${unity_test_type_regex}[ \r\n\t]*\\(([A-Za-z_0-9 ,\r\n\t]+)\\)" found_tests "${contents}")
     foreach(hit ${found_tests})
       string(STRIP ${hit} hit)
@@ -75,14 +100,20 @@ function(unity_fixture_add_host_tests TARGET)
       string(REGEX REPLACE ${unity_test_name_regex} "\\1" unity_test_group ${hit})
       string(REGEX REPLACE ${unity_test_name_regex} "\\2" unity_test_case ${hit})
 
+      # Ignore already added tests
+      if(unity_test_name IN_LIST added_tests)
+        continue()
+      endif()
+
       set(ctest_test_name ${ARG_PREFIX}${unity_test_name})
       add_test(NAME ${ctest_test_name} COMMAND ${_output} -g ${unity_test_group} -n ${unity_test_case} -v ${ARG_EXTRA_ARGS})
+      list(APPEND added_tests ${unity_test_name})
 
       # Make sure ignored unity tests get disabled in CTest
-      if(hit MATCHES "(^|\\.)IGNORE_")
-        set_tests_properties(${ctest_test_name} PROPERTIES DISABLED TRUE)
+      if(unity_test_name IN_LIST ignored_tests)
+        set_tests_properties(${ctest_test_name} PROPERTIES DISABLED TRUE)  # Intended test execution
       else()
-        set_tests_properties(${ctest_test_name} PROPERTIES SKIP_REGULAR_EXPRESSION "0 Tests")
+        set_tests_properties(${ctest_test_name} PROPERTIES SKIP_REGULAR_EXPRESSION "0 Tests")  # Unintended test execution
       endif()
     endforeach()
   endforeach()

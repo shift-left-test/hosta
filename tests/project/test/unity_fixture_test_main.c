@@ -54,6 +54,9 @@ TEST(SecondGroup, test_divide) {
 TEST_GROUP_RUNNER(SecondGroup) {
   RUN_TEST_CASE(SecondGroup, test_multiply);
   // RUN_TEST_CASE(SecondGroup, test_divide);  // This line is intentionally removed for testing
+  #if 0
+  RUN_TEST_CASE(SecondGroup, test_divide);  // This line is intentionally added for testing
+  #endif
 }
 
 static void runAllTests(void) {
