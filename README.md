@@ -168,6 +168,10 @@ unity_fixture_add_host_tests(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>
 
 You may refer to [this link](https://github.com/ThrowTheSwitch/Unity/tree/master/extras/fixture) for more information about the Unity fixture.
 
+#### Important Notice
+
+The `unity_fixture_add_host_tests` function is designed to run tests on a per-test-case basis. It identifies which tests to execute using the `RUN_TEST_CASE` macro. This means that any tests commented out will not be executed. However, some tests might unintentionally be included in the execution list. If this occurs, those tests will be marked as "Skipped".
+
 ### Adding an Executable as Tests with CTest by Scanning Source Code for Google Test Macros
 
 To automatically add an executable target as tests with CTest by scanning the source code for Google test macros, use the `gtest_add_host_tests` function:
