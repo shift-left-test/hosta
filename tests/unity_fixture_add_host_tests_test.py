@@ -122,6 +122,34 @@ def test_skipped(testing):
     stdout = testing.ctest().stdout
     assert "UnitTest.test ....................***Skipped" in stdout
 
+def test_skipped_no_tests(testing):
+    test_file = '''
+    #include <unity_fixture.h>
+    TEST_GROUP(UnitTest);
+    TEST_SETUP(UnitTest) { }
+    TEST_TEAR_DOWN(UnitTest) { }
+    #if 0
+    TEST(UnitTest, test) {
+      TEST_ASSERT_TRUE(1);
+    }
+    #endif
+    static void runAllTests(void) {
+    #if 0
+      RUN_TEST_CASE(UnitTest, test);
+    #endif
+    }
+    int main(int argc, const char* argv[]) {
+      return UnityMain(argc, argv, runAllTests);
+    }
+    '''
+    testing.copytree("tests/project/external/unity", "")
+    testing.write("CMakeLists.txt", content)
+    testing.write("test_file.c", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    stdout = testing.ctest().stdout
+    assert "UnitTest.test ....................***Skipped" in stdout
+
 def test_no_tests(testing):
     test_file = '''
     #include <unity_fixture.h>
