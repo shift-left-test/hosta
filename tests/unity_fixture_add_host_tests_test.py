@@ -21,6 +21,7 @@ add_host_executable(unittest
   SOURCES test_file.c
   LINK_LIBRARIES PRIVATE Host::unity_fixture
 )
+option(ENABLE_HOST_UNITY_FIXTURE_EXACT_MATCH "Unity fixture exact matching" OFF)
 unity_fixture_add_host_tests(Host::unittest)
 '''
 
@@ -275,3 +276,55 @@ def test_run_test_case_multiple_times(testing):
     testing.write("test_file.c", test_file)
     stderr = testing.configure_internal().stderr
     assert 'test NAME "UnitTest.test" which already exists' not in stderr
+
+test_file = '''
+#include <unity_fixture.h>
+
+TEST_GROUP(Test1);
+TEST_SETUP(Test1) { }
+TEST_TEAR_DOWN(Test1) { }
+TEST(Test1, test1) { TEST_ASSERT_TRUE(1); }
+
+TEST_GROUP(Test123);
+TEST_SETUP(Test123) { }
+TEST_TEAR_DOWN(Test123) { }
+TEST(Test123, test123) { TEST_ASSERT_TRUE(1); }
+
+static void runAllTests(void) {
+  RUN_TEST_CASE(Test1, test1);
+  RUN_TEST_CASE(Test123, test123);
+}
+
+int main(int argc, const char* argv[]) {
+  return UnityMain(argc, argv, runAllTests);
+}
+'''
+
+def test_enable_exact_match_with_unknown_group_name(testing):
+    testing.copytree("tests/project/external/unity", "")
+    testing.write("CMakeLists.txt", content)
+    testing.write("test_file.c", test_file)
+    testing.configure_internal(options=['-DENABLE_HOST_UNITY_FIXTURE_EXACT_MATCH=ON']).check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    stderr = testing.ctest('-R Test\\.test --verbose').stderr
+    assert 'No tests were found!!!' in stderr
+
+def test_enable_exact_match_with_known_group_name(testing):
+    testing.copytree("tests/project/external/unity", "")
+    testing.write("CMakeLists.txt", content)
+    testing.write("test_file.c", test_file)
+    testing.configure_internal(options=['-DENABLE_HOST_UNITY_FIXTURE_EXACT_MATCH=ON']).check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    stdout = testing.ctest('-R Test1\\.test --verbose').stdout
+    assert 'TEST(Test1, test1) PASS' in stdout
+    assert 'TEST(Test123, test123) PASS' not in stdout
+
+def test_enable_exact_match_with_unknown_test_name(testing):
+    testing.copytree("tests/project/external/unity", "")
+    testing.write("CMakeLists.txt", content)
+    testing.write("test_file.c", test_file)
+    testing.configure_internal(options=['-DENABLE_HOST_UNITY_FIXTURE_EXACT_MATCH=ON']).check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    stdout = testing.ctest('-R Test1\\.test1 --verbose').stdout
+    assert 'TEST(Test1, test1) PASS' in stdout
+    assert 'TEST(Test123, test123) PASS' not in stdout

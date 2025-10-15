@@ -1,10 +1,9 @@
 /* =========================================================================
     Unity - A Test Framework for C
     ThrowTheSwitch.org
-    Copyright (c) 2007-24 Mike Karlesky, Mark VanderVoord, & Greg Williams
+    Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
     SPDX-License-Identifier: MIT
 ========================================================================= */
-
 
 #ifndef UNITY_FIXTURE_INTERNALS_H_
 #define UNITY_FIXTURE_INTERNALS_H_
@@ -18,9 +17,12 @@ struct UNITY_FIXTURE_T
 {
     int Verbose;
     int Silent;
+    int DryRun;
     unsigned int RepeatCount;
     const char* NameFilter;
+    const char* Name;
     const char* GroupFilter;
+    const char* Group;
 };
 extern struct UNITY_FIXTURE_T UnityFixture;
 

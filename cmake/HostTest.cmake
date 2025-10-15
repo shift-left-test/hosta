@@ -106,7 +106,11 @@ function(unity_fixture_add_host_tests TARGET)
       endif()
 
       set(ctest_test_name ${ARG_PREFIX}${unity_test_name})
-      add_test(NAME ${ctest_test_name} COMMAND ${_output} -g ${unity_test_group} -n ${unity_test_case} -v ${ARG_EXTRA_ARGS})
+      if(ENABLE_HOST_UNITY_FIXTURE_EXACT_MATCH)
+        add_test(NAME ${ctest_test_name} COMMAND ${_output} -G ${unity_test_group} -N ${unity_test_case} -v ${ARG_EXTRA_ARGS})
+      else()
+        add_test(NAME ${ctest_test_name} COMMAND ${_output} -g ${unity_test_group} -n ${unity_test_case} -v ${ARG_EXTRA_ARGS})
+      endif()
       list(APPEND added_tests ${unity_test_name})
 
       # Make sure ignored unity tests get disabled in CTest

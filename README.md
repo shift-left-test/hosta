@@ -207,6 +207,7 @@ The following CMake variables can be used to configure internal behaviors:
 - `CMAKE_HOST_STATIC_LIBRARY_SUFFIX`: Defines the extension for static libraries
 - `CMAKE_HOST_STATIC_LINKER_FLAGS`: Specifies global linker flags for static libraries
 - `ENABLE_HOST_LANGUAGES`: Defines preferred host languages (default: C CXX)
+- `ENABLE_HOST_UNITY_FIXTURE_EXACT_MATCH`: Only runs tests whose group and name exactly match the specified value (Note: This feature requires Unity Fixture to support the -G and -N options. This option is disabled by default for backward compatibility.)
 
 ## Building the Project
 
