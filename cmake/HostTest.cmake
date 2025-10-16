@@ -123,6 +123,93 @@ function(unity_fixture_add_host_tests TARGET)
   endforeach()
 endfunction(unity_fixture_add_host_tests)
 
+set(UNITY_FIXTURE_DISCOVER_HOST_TESTS_SCRIPT
+  ${CMAKE_CURRENT_LIST_DIR}/UnityFixtureAddTests.cmake
+)
+
+function(unity_fixture_discover_host_tests TARGET)
+  # Assume that enable_testing() is called
+  if(NOT CMAKE_TESTING_ENABLED)
+    return()
+  endif()
+
+  # Remove the host namespace prefix if exists
+  remove_host_namespace_prefix(TARGET "${TARGET}")
+
+  # Path to the executable
+  get_host_target_properties(${CMAKE_HOST_NAMESPACE_PREFIX}${TARGET}
+    OUTPUT_NAME _output
+  )
+
+  set(oneValueArgs PREFIX WORKING_DIRECTORY TEST_LIST DISCOVERY_TIMEOUT)
+  set(multiValueArgs EXTRA_ARGS PROPERTIES)
+  cmake_parse_arguments(ARG "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  if(NOT ARG_WORKING_DIRECTORY)
+    set(ARG_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+  endif()
+  if(NOT ARG_TEST_LIST)
+    set(ARG_TEST_LIST ${TARGET}_TESTS)
+  endif()
+  if(NOT ARG_DISCOVERY_TIMEOUT)
+    set(ARG_DISCOVERY_TIMEOUT 5)
+  endif()
+
+  get_property(
+    has_counter
+    TARGET "${CMAKE_HOST_TARGET_PREFIX}${TARGET}"
+    PROPERTY CTEST_DISCOVERED_TEST_COUNTER
+    SET
+  )
+  if(has_counter)
+    get_property(
+      counter
+      TARGET "${CMAKE_HOST_TARGET_PREFIX}${TARGET}"
+      PROPERTY CTEST_DISCOVERED_TEST_COUNTER
+    )
+    math(EXPR counter "${counter} + 1")
+  else()
+    set(counter 1)
+  endif()
+  set_property(
+    TARGET "${CMAKE_HOST_TARGET_PREFIX}${TARGET}"
+    PROPERTY CTEST_DISCOVERED_TEST_COUNTER
+    ${counter}
+  )
+
+  set(ctest_file_base "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}[${counter}]")
+  set(ctest_include_file "${ctest_file_base}_include.cmake")
+  set(ctest_tests_file "${ctest_file_base}_tests.cmake")
+  add_custom_command(
+    TARGET "${CMAKE_HOST_TARGET_PREFIX}${TARGET}" POST_BUILD
+    BYPRODUCTS "${ctest_tests_file}"
+    COMMAND "${CMAKE_COMMAND}"
+            -D "TEST_TARGET=${CMAKE_HOST_TARGET_PREFIX}${TARGET}"
+            -D "TEST_EXECUTABLE=${_output}"
+            -D "TEST_WORKING_DIRECTORY=${ARG_WORKING_DIRECTORY}"
+            -D "TEST_EXTRA_ARGS=${ARG_EXTRA_ARGS}"
+            -D "TEST_PROPERTIES=${ARG_PROPERTIES}"
+            -D "TEST_PREFIX=${ARG_PREFIX}"
+            -D "TEST_LIST=${ARG_TEST_LIST}"
+            -D "CTEST_FILE=${ctest_tests_file}"
+            -D "TEST_DISCOVERY_TIMEOUT=${ARG_DISCOVERY_TIMEOUT}"
+            -P "${UNITY_FIXTURE_DISCOVER_HOST_TESTS_SCRIPT}"
+    VERBATIM
+  )
+  file(WRITE "${ctest_include_file}"
+    "if(EXISTS \"${ctest_tests_file}\")\n"
+    "  include(\"${ctest_tests_file}\")\n"
+    "else()\n"
+    "  add_test(${TARGET}_NOT_BUILT ${TARGET}_NOT_BUILT)\n"
+    "endif()\n"
+  )
+
+  # Add discovered tests to directory TEST_INCLUDE_FILES
+  set_property(DIRECTORY
+    APPEND PROPERTY TEST_INCLUDE_FILES "${ctest_include_file}"
+  )
+endfunction(unity_fixture_discover_host_tests)
+
 function(gtest_add_host_tests TARGET)
   # Assume that enable_testing() is called
   if(NOT CMAKE_TESTING_ENABLED)

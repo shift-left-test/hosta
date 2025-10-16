@@ -85,6 +85,8 @@ cmake_install.cmake
 install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
+*_include.cmake
+*_tests.cmake
 _deps
 
 ### CMake Patch ###

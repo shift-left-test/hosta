@@ -145,25 +145,25 @@ add_host_library(world STATIC
 To add an executable target as a test with CTest, use the `add_host_test` function:
 
 ```cmake
-add_host_test(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>])
+add_host_test(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>...])
 
 # Parameters:
 # - target: Specifies the name of the executable target created with `add_host_executable`
-# - prefix: Specifies a prefix to be prepended to the test case name
-# - extra_args: Any additional arguments to pass on the command line
+# - PREFIX: Specifies a prefix to be prepended to the test case name
+# - EXTRA_ARGS: Any additional arguments to pass on the command line
 ```
 
-### Adding an Executable as Tests with CTest by Scanning Source Code for Unity Fixture Test Macros
+### Adding an Executable as Tests for Unity Fixture Test Macros
 
 To automatically add an executable target as tests with CTest by scanning the source code for Unity fixture test macros, use the `unity_fixture_add_host_tests` function:
 
 ```cmake
-unity_fixture_add_host_tests(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>])
+unity_fixture_add_host_tests(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>...])
 
 # Parameters:
 # - target: Specifies the name of the executable target created with `add_host_executable`
-# - prefix: Specifies a prefix to be prepended to the name of each test case
-# - extra_args: Any additional arguments to pass on the command line
+# - PREFIX: Specifies a prefix to be prepended to the name of each test case
+# - EXTRA_ARGS: Any additional arguments to pass on the command line
 ```
 
 You may refer to [this link](https://github.com/ThrowTheSwitch/Unity/tree/master/extras/fixture) for more information about the Unity fixture.
@@ -176,6 +176,21 @@ The `unity_fixture_add_host_tests` function runs tests on an individual basis by
 - Not Executed: Tests with `RUN_TEST_CASE` macros that are commented out will not be executed.
 - Skipped: Tests unintentionally included in the execution list will be marked as "Skipped".
 - Disabled: Tests intentionally ignored with the `IGNORE_TEST` macro will be marked as "Disabled".
+
+To dynamically discover tests that should be executed from an executable target, use the `unity_fixture_discover_host_tests` function:
+
+```cmake
+unity_fixture_discover_host_tests(<target> [PREFIX <prefix>] [WORKING_DIRECTORY <directory>] [TEST_LIST <name>] [DISCOVERY_TIMEOUT <second>] [EXTRA_ARGS <extra_args>...] [PROPERTIES <properties>...]
+
+# Parameters:
+# - target: Specifies the name of the executable target created with `add_host_executable`
+# - PREFIX: Specifies a prefix to be prepended to the name of each test case
+# - WORKING_DIRECTORY: Specifies the directory in which to run the discovered tests
+# - TEST_LIST: Make the list of tests available in this variable, instead of the default `<target>_TESTS`
+# - DISCOVERY_TIMEOUT: Specifies how long (in seconds) CMake will wait for the executable to enumerate available tests
+# - EXTRA_ARGS: Any extra arguments to pass on the command line to each test case
+# - PROPERTIES: Specifies additional properties to be set on all discovered tests
+```
 
 ### Adding an Executable as Tests with CTest by Scanning Source Code for Google Test Macros
 
