@@ -46,8 +46,7 @@ def test_passed(testing):
     testing.write("test_file.c", test_file)
     testing.configure_internal().check_returncode()
     testing.cmake("host-targets").check_returncode()
-    stdout = testing.ctest().stdout
-    assert "UnitTest.test ....................   Passed" in stdout
+    assert "UnitTest.test ....................   Passed" in testing.ctest().stdout
 
 def test_failed(testing):
     test_file = '''
@@ -70,8 +69,7 @@ def test_failed(testing):
     testing.write("test_file.c", test_file)
     testing.configure_internal().check_returncode()
     testing.cmake("host-targets").check_returncode()
-    stdout = testing.ctest().stdout
-    assert "UnitTest.test ....................***Failed" in stdout
+    assert "UnitTest.test ....................***Failed" in testing.ctest().stdout
 
 def test_disabled(testing):
     test_file = '''
@@ -94,8 +92,7 @@ def test_disabled(testing):
     testing.write("test_file.c", test_file)
     testing.configure_internal().check_returncode()
     testing.cmake("host-targets").check_returncode()
-    stdout = testing.ctest().stdout
-    assert "UnitTest.test ....................***Not Run (Disabled)" in stdout
+    assert "UnitTest.test ....................***Not Run (Disabled)" in testing.ctest().stdout
 
 def test_skipped(testing):
     test_file = '''
@@ -120,8 +117,7 @@ def test_skipped(testing):
     testing.write("test_file.c", test_file)
     testing.configure_internal().check_returncode()
     testing.cmake("host-targets").check_returncode()
-    stdout = testing.ctest().stdout
-    assert "UnitTest.test ....................***Skipped" in stdout
+    assert "UnitTest.test ....................***Skipped" in testing.ctest().stdout
 
 def test_skipped_no_tests(testing):
     test_file = '''
@@ -148,8 +144,7 @@ def test_skipped_no_tests(testing):
     testing.write("test_file.c", test_file)
     testing.configure_internal().check_returncode()
     testing.cmake("host-targets").check_returncode()
-    stdout = testing.ctest().stdout
-    assert "UnitTest.test ....................***Skipped" in stdout
+    assert "UnitTest.test ....................***Skipped" in testing.ctest().stdout
 
 def test_no_tests(testing):
     test_file = '''
@@ -171,8 +166,7 @@ def test_no_tests(testing):
     testing.write("test_file.c", test_file)
     testing.configure_internal().check_returncode()
     testing.cmake("host-targets").check_returncode()
-    stderr = testing.ctest().stderr
-    assert "No tests were found!!!" in stderr
+    assert "No tests were found!!!" in testing.ctest().stderr
 
 def test_single_line_commented(testing):
     test_file = '''
@@ -195,8 +189,7 @@ def test_single_line_commented(testing):
     testing.write("test_file.c", test_file)
     testing.configure_internal().check_returncode()
     testing.cmake("host-targets").check_returncode()
-    stderr = testing.ctest().stderr
-    assert "No tests were found!!!" in stderr
+    assert "No tests were found!!!" in testing.ctest().stderr
 
 def test_multi_line_commented(testing):
     test_file = '''
@@ -221,8 +214,7 @@ def test_multi_line_commented(testing):
     testing.write("test_file.c", test_file)
     testing.configure_internal().check_returncode()
     testing.cmake("host-targets").check_returncode()
-    stderr = testing.ctest().stderr
-    assert "No tests were found!!!" in stderr
+    assert "No tests were found!!!" in testing.ctest().stderr
 
 def test_passed_with_multi_line_comments(testing):
     test_file = '''
@@ -251,8 +243,7 @@ def test_passed_with_multi_line_comments(testing):
     testing.write("test_file.c", test_file)
     testing.configure_internal().check_returncode()
     testing.cmake("host-targets").check_returncode()
-    stdout = testing.ctest().stdout
-    assert "UnitTest.test ....................   Passed" in stdout
+    assert "UnitTest.test ....................   Passed" in testing.ctest().stdout
 
 def test_run_test_case_multiple_times(testing):
     test_file = '''
@@ -274,8 +265,7 @@ def test_run_test_case_multiple_times(testing):
     testing.copytree("tests/project/external/unity", "")
     testing.write("CMakeLists.txt", content)
     testing.write("test_file.c", test_file)
-    stderr = testing.configure_internal().stderr
-    assert 'test NAME "UnitTest.test" which already exists' not in stderr
+    assert 'test NAME "UnitTest.test" which already exists' not in testing.configure_internal().stderr
 
 test_file = '''
 #include <unity_fixture.h>

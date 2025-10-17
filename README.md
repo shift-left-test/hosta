@@ -192,7 +192,7 @@ unity_fixture_discover_host_tests(<target> [PREFIX <prefix>] [WORKING_DIRECTORY 
 # - PROPERTIES: Specifies additional properties to be set on all discovered tests
 ```
 
-### Adding an Executable as Tests with CTest by Scanning Source Code for Google Test Macros
+### Adding an Executable as Tests with CTest for Google Test Macros
 
 To automatically add an executable target as tests with CTest by scanning the source code for Google test macros, use the `gtest_add_host_tests` function:
 
@@ -203,6 +203,23 @@ gtest_add_host_tests(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>])
 # - target: Specifies the name of the executable target created with `add_host_executable`
 # - prefix: Specifies a prefix to be prepended to the name of each test case
 # - extra_args: Any additional arguments to pass on the command line
+```
+
+To dynamically discover tests that should be executed from an executable target, use the `gtest_discover_host_tests` function:
+
+```cmake
+gtest_discover_host_tests(<target> [PREFIX <prefix>] [NO_PRETTY_TYPES] [NO_PRETTY_VALUES] [WORKING_DIRECTORY <directory>] [TEST_LIST <name>] [DISCOVERY_TIMEOUT <second>] [EXTRA_ARGS <extra_args>...] [PROPERTIES <properties>...]
+
+# Parameters:
+# - target: Specifies the name of the executable target created with `add_host_executable`
+# - PREFIX: Specifies a prefix to be prepended to the name of each test case
+# - NO_PRETTY_TYPES: Uses the type index instead of the actual type name in type-parameterized test names
+# - NO_PRETTY_VALUES: Use the value index instead of the actual value in value-parameterized test names
+# - WORKING_DIRECTORY: Specifies the directory in which to run the discovered tests
+# - TEST_LIST: Make the list of tests available in this variable, instead of the default `<target>_TESTS`
+# - DISCOVERY_TIMEOUT: Specifies how long (in seconds) CMake will wait for the executable to enumerate available tests
+# - EXTRA_ARGS: Any extra arguments to pass on the command line to each test case
+# - PROPERTIES: Specifies additional properties to be set on all discovered tests
 ```
 
 ## CMake Variables

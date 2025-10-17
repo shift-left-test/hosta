@@ -51,8 +51,7 @@ def test_prefix_argument(testing):
     testing.write("test_file.c", test_file)
     testing.configure_internal(options=['-DEXTRA_ARGS="PREFIX;HELLO"']).check_returncode()
     testing.cmake("host-targets").check_returncode()
-    stdout = testing.ctest().stdout
-    assert 'HELLO' in stdout
+    assert 'HELLO' in testing.ctest().stdout
 
 def test_test_list_argument(testing):
     testing.copytree("tests/project/external/unity", "")
@@ -94,8 +93,7 @@ def test_properties_argument(testing):
 
 def test_counter(testing):
     testing.copytree("tests/project/external/unity", "")
-    testing.write("CMakeLists.txt", content + "\n" +
-                  "unity_fixture_discover_host_tests(Host::unittest)")
+    testing.write("CMakeLists.txt", content + "\n" + "unity_fixture_discover_host_tests(Host::unittest)")
     testing.write("test_file.c", test_file)
     testing.configure_internal().check_returncode()
     testing.cmake("host-targets").check_returncode()
@@ -136,7 +134,7 @@ def test_with_no_executable(testing):
     testing.configure_internal().check_returncode()
     assert 'unittest_NOT_BUILT' in testing.ctest().stdout
 
-def test_with_discovered_tests(testing):
+def test_with_passed_tests(testing):
     testing.copytree("tests/project/external/unity", "")
     testing.write("CMakeLists.txt", content)
     testing.write("test_file.c", test_file)
