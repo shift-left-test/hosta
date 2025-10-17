@@ -115,9 +115,7 @@ function(unity_fixture_add_host_tests TARGET)
 
       # Make sure ignored unity tests get disabled in CTest
       if(unity_test_name IN_LIST ignored_tests)
-        set_tests_properties(${ctest_test_name} PROPERTIES DISABLED TRUE)  # Intended test execution
-      else()
-        set_tests_properties(${ctest_test_name} PROPERTIES SKIP_REGULAR_EXPRESSION "0 Tests|^$")  # Unintended test execution
+        set_tests_properties(${ctest_test_name} PROPERTIES DISABLED TRUE)
       endif()
     endforeach()
   endforeach()

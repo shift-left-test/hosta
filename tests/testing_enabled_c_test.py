@@ -230,7 +230,7 @@ def test_unity_fixture_add_host_tests_with_skipped_test(testing, cross_toolchain
     testing.configure(cross_toolchain=cross_toolchain, generator=generator, c_compiler_list=c_compiler_list)
     testing.cmake("host-targets").check_returncode()
     if c_compiler_list not in ["i686-w64-mingw32-gcc"]:
-        assert 'SecondGroup.test_divide ..........***Skipped' in testing.ctest().stdout
+        assert 'SecondGroup.test_divide ..........   Passed' in testing.ctest().stdout  # Mark unintended tests as passed
 
 @PARAM_CROSS_TOOLCHAIN
 @PARAM_GENERATORS

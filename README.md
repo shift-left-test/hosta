@@ -166,17 +166,6 @@ unity_fixture_add_host_tests(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>
 # - EXTRA_ARGS: Any additional arguments to pass on the command line
 ```
 
-You may refer to [this link](https://github.com/ThrowTheSwitch/Unity/tree/master/extras/fixture) for more information about the Unity fixture.
-
-#### Understanding Test Execution with `unity_fixture_add_host_tests`
-
-The `unity_fixture_add_host_tests` function runs tests on an individual basis by scanning the source code for `RUN_TEST_CASE` macros, instead of executing the program. The execution of tests depends on whether these macros are available, resulting in the following states:
-
-- Executed: Tests with `RUN_TEST_CASE` macros will be executed as expected.
-- Not Executed: Tests with `RUN_TEST_CASE` macros that are commented out will not be executed.
-- Skipped: Tests unintentionally included in the execution list will be marked as "Skipped".
-- Disabled: Tests intentionally ignored with the `IGNORE_TEST` macro will be marked as "Disabled".
-
 To dynamically discover tests that should be executed from an executable target, use the `unity_fixture_discover_host_tests` function:
 
 ```cmake
@@ -191,6 +180,9 @@ unity_fixture_discover_host_tests(<target> [PREFIX <prefix>] [WORKING_DIRECTORY 
 # - EXTRA_ARGS: Any extra arguments to pass on the command line to each test case
 # - PROPERTIES: Specifies additional properties to be set on all discovered tests
 ```
+
+This feature requires -d (dry-run) option provided by Unity fixture. Make sure that Unity fixture version supports this option before using the feature.
+You may refer to [this link](https://github.com/ThrowTheSwitch/Unity/tree/master/extras/fixture) for more information about the Unity fixture.
 
 ### Adding an Executable as Tests with CTest for Google Test Macros
 
@@ -239,7 +231,7 @@ The following CMake variables can be used to configure internal behaviors:
 - `CMAKE_HOST_STATIC_LIBRARY_SUFFIX`: Defines the extension for static libraries
 - `CMAKE_HOST_STATIC_LINKER_FLAGS`: Specifies global linker flags for static libraries
 - `ENABLE_HOST_LANGUAGES`: Defines preferred host languages (default: C CXX)
-- `ENABLE_HOST_UNITY_FIXTURE_EXACT_MATCH`: Only runs tests whose group and name exactly match the specified value (Note: This feature requires Unity Fixture to support the -G and -N options. This option is disabled by default for backward compatibility.)
+- `ENABLE_HOST_UNITY_FIXTURE_EXACT_MATCH`: Only runs tests whose group and name exactly match the specified value (Note: This feature requires -G and -N options provided by Unity fixture. This is disabled by default for backward compatibility.)
 
 ## Building the Project
 
