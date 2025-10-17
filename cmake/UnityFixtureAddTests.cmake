@@ -41,7 +41,7 @@ if(NOT output MATCHES "Unity")
 endif()
 if(NOT output MATCHES "-d          Dry run all tests")
   message(FATAL_ERROR
-    "Missing dry-run option.\n"
+    "Missing dry-run option. Upgrade Unity Fixture to the latest version.\n"
     "  Path: '${TEST_EXECUTABLE}'\n"
     "  Result: ${result}\n"
   )
