@@ -1,10 +1,10 @@
-# Hosta
+# hosta
 
 > Host based test automation for C/C++
 
 ## About
 
-Hosta is a comprehensive solution for building and executing unit tests for C/C++ programs using the host build toolchain. It leverages CMake scripts to facilitate the creation of test programs and their execution on the host platform via CTest, even within a cross-build toolchain environment.
+`hosta` is a comprehensive solution for building and executing unit tests for C/C++ programs using the host build toolchain. It leverages CMake scripts to facilitate the creation of test programs and their execution on the host platform via CTest, even within a cross-build toolchain environment.
 
 ## Features
 
@@ -49,7 +49,7 @@ $ cd /test
 
 ## Setup Instructions
 
-To integrate Hosta into your project, follow these steps:
+To integrate `hosta` into your project, follow these steps:
 
 Copy the files from the cmake directory to your project's CMake script directory.
 Add the following line to your top-level CMakeLists.txt file:
