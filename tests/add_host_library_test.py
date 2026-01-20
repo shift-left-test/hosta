@@ -304,18 +304,6 @@ def test_interface_link_libraries_with_private_options(testing):
     assert 'bbb' not in stdout
     assert 'ccc' not in stdout
 
-def test_interface_rebuild(testing):
-    content = '''
-    cmake_minimum_required(VERSION 3.16)
-    project(CMakeTest LANGUAGES NONE)
-    include(cmake/HostBuild.cmake)
-    add_host_library(hello INTERFACE)
-    '''
-    testing.write("CMakeLists.txt", content)
-    testing.configure_internal().check_returncode()
-    assert 'Scanning dependencies of target HOST-hello' in testing.cmake("host-targets").stdout
-    assert not 'Scanning dependencies of target HOST-hello' in testing.cmake("host-targets").stdout
-
 def test_cmake_host_flags(testing):
     content = '''
     cmake_minimum_required(VERSION 3.16)

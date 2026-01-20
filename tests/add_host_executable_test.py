@@ -172,8 +172,8 @@ def test_executable_rebuild(testing):
     testing.write("CMakeLists.txt", content)
     testing.write("main.c", "int main() { return 0; }")
     testing.configure_internal().check_returncode()
-    assert 'Scanning dependencies of target HOST-main' in testing.cmake("host-targets").stdout
-    assert not 'Scanning dependencies of target HOST-main' in testing.cmake("host-targets").stdout
+    assert 'Linking HOSTC executable' in testing.cmake("host-targets").stdout
+    assert not 'Linking HOSTC executable' in testing.cmake("host-targets").stdout
 
 def test_include_before_project(testing):
     content = '''

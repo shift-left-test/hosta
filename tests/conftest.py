@@ -57,7 +57,7 @@ class CMakeFixture(object):
         return output
 
     def gcovr(self):
-        return self.execute(f'gcovr --root {self.workspace}')
+        return self.execute(f'gcovr --root {self.workspace} --exclude ".*external.*"')
 
     def exists(self, path):
         return os.path.exists(os.path.join(self.build, path))

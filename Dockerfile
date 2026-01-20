@@ -1,7 +1,7 @@
 # Copyright (c) 2024 LG Electronics Inc.
 # SPDX-License-Identifier: MIT
 
-FROM ubuntu:20.04 AS builder
+FROM ubuntu:24.04 AS builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -23,22 +23,19 @@ RUN apt-get install -y --no-install-recommends \
     gcc \
     gcc-mingw-w64 \
     gcc-multilib \
+    gcovr \
+    libstdc++-14-dev \
     ninja-build \
     python3 \
     python3-pip \
     python3-pytest \
+    python3-pytest-xdist \
     tzdata
 
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install -U pip
-RUN python3 -m pip install -U \
-    gcovr \
-    pytest \
-    pytest-xdist
-
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 
 COPY --from=builder /usr /usr
 COPY --from=builder /etc /etc

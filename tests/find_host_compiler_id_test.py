@@ -46,9 +46,9 @@ def test_known_host_compiler(testing):
     testing.write("CMakeLists.txt", content)
     stdout = testing.configure_internal().stdout
     assert 'CMAKE_HOSTC_COMPILER_ID: Clang' in stdout
-    assert 'CMAKE_HOSTC_COMPILER_VERSION: 10.0.0' in stdout
+    assert 'CMAKE_HOSTC_COMPILER_VERSION: 18.1.3' in stdout
     assert 'CMAKE_HOSTC_PLATFORM_ID: Linux' in stdout
-    assert 'CMAKE_HOSTC_STANDARD_COMPUTED_DEFAULT: 11' in stdout
+    assert 'CMAKE_HOSTC_STANDARD_COMPUTED_DEFAULT: 17' in stdout
     assert 'CMAKE_HOSTC_VERBOSE_FLAG: -v' in stdout
     assert 'CMAKE_INCLUDE_SYSTEM_FLAG_HOSTC: -isystem' in stdout
     assert 'CMAKE_HOSTC90_STANDARD_COMPILE_OPTION: -std=c90' in stdout

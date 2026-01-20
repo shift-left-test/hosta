@@ -9,18 +9,18 @@ import pytest
 
 def test_host_compiler_info(testing):
     testing.configure(c_compiler_list="clang")
-    compiler_info = testing.read("CMakeFiles/3.16.3-hosta.internal/CMakeHOSTCCompiler.cmake")
+    compiler_info = testing.read("CMakeFiles/3.28.3-hosta.internal/CMakeHOSTCCompiler.cmake")
     assert 'set(CMAKE_HOSTC_COMPILER "/usr/bin/clang")' in compiler_info
     assert 'set(CMAKE_HOSTC_COMPILER_ID "Clang")' in compiler_info
-    assert 'set(CMAKE_HOSTC_COMPILER_VERSION "10.0.0")' in compiler_info
+    assert 'set(CMAKE_HOSTC_COMPILER_VERSION "18.1.3")' in compiler_info
     assert 'set(CMAKE_HOSTC_COMPILER_WORKS TRUE)' in compiler_info
-    assert 'set(CMAKE_HOSTC_STANDARD_COMPUTED_DEFAULT "11")' in compiler_info
+    assert 'set(CMAKE_HOSTC_STANDARD_COMPUTED_DEFAULT "17")' in compiler_info
     assert 'set(CMAKE_HOSTC_PLATFORM_ID "Linux")' in compiler_info
     assert 'set(CMAKE_HOSTC_ABI_COMPILED TRUE)' in compiler_info
     assert 'set(CMAKE_HOSTC_COMPILER_ABI "ELF")' in compiler_info
-    assert 'set(CMAKE_HOSTC_IMPLICIT_INCLUDE_DIRECTORIES "/usr/local/include;/usr/lib/llvm-10/lib/clang/10.0.0/include;/usr/include/x86_64-linux-gnu;/usr/include")' in compiler_info
+    assert 'set(CMAKE_HOSTC_IMPLICIT_INCLUDE_DIRECTORIES "/usr/lib/llvm-18/lib/clang/18/include;/usr/local/include;/usr/include/x86_64-linux-gnu;/usr/include")' in compiler_info
     assert 'set(CMAKE_HOSTC_IMPLICIT_LINK_LIBRARIES "gcc;gcc_s;c;gcc;gcc_s")' in compiler_info
-    assert 'set(CMAKE_HOSTC_IMPLICIT_LINK_DIRECTORIES "/usr/lib/gcc/x86_64-linux-gnu/9;/usr/lib/x86_64-linux-gnu;/usr/lib64;/lib/x86_64-linux-gnu;/lib64;/usr/lib;/usr/lib/llvm-10/lib;/lib")' in compiler_info
+    assert 'set(CMAKE_HOSTC_IMPLICIT_LINK_DIRECTORIES "/usr/lib/gcc/x86_64-linux-gnu/14;/usr/lib64;/lib/x86_64-linux-gnu;/lib64;/usr/lib/x86_64-linux-gnu;/lib;/usr/lib")' in compiler_info
     assert 'set(CMAKE_HOSTC_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES "")' in compiler_info
     assert 'set(CMAKE_HOSTC_VERBOSE_FLAG "-v")' in compiler_info
     assert 'set(CMAKE_HOSTC_SOURCE_FILE_EXTENSIONS "c;m")' in compiler_info

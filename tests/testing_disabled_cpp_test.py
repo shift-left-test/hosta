@@ -23,7 +23,7 @@ def test_build_target_works(testing, cross_toolchain, generator, cpp_compiler_li
 @PARAM_CPP_COMPILERS
 def test_build_compiler_info_available(testing, cross_toolchain, generator, cpp_compiler_list):
     testing.configure(testing_enabled=False, cross_toolchain=cross_toolchain, generator=generator, cpp_compiler_list=cpp_compiler_list).check_returncode()
-    assert testing.exists("CMakeFiles/3.16.3/CMakeCXXCompiler.cmake")
+    assert testing.exists("CMakeFiles/3.28.3/CMakeCXXCompiler.cmake")
 
 @PARAM_CROSS_TOOLCHAIN
 @PARAM_GENERATORS
@@ -38,4 +38,4 @@ def test_test_targets_not_available(testing, cross_toolchain, generator, cpp_com
 @PARAM_CPP_COMPILERS
 def test_test_compiler_info_available(testing, cross_toolchain, generator, cpp_compiler_list):
     testing.configure(testing_enabled=False, cross_toolchain=cross_toolchain, generator=generator, cpp_compiler_list=cpp_compiler_list)
-    assert testing.exists("CMakeFiles/3.16.3-hosta.internal/CMakeHOSTCXXCompiler.cmake")
+    assert testing.exists("CMakeFiles/3.28.3-hosta.internal/CMakeHOSTCXXCompiler.cmake")
