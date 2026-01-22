@@ -393,7 +393,7 @@ function(do_host_compile lang OUTPUT)
   add_custom_command(
     OUTPUT ${_relative_output}
     COMMAND ${BUILD_COMMAND}
-    DEPENDS ${BUILD_FILE_DEPENDENCIES} ${BUILD_DEPENDS}
+    DEPENDS ${BUILD_DEPENDS}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building HOST${lang} object ${_relative_output}"
     COMMAND_EXPAND_LISTS
