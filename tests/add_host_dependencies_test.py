@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT
 import pytest
 
 content = '''
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
 
 project(CMakeTest LANGUAGES NONE)
 
@@ -54,7 +54,7 @@ def test_host_namespace_with_plain_depend_name(testing):
 
 def test_host_multiple_dependencies(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_custom_target(HOST-first COMMAND echo "first")

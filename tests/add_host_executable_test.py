@@ -9,7 +9,7 @@ import pytest
 
 def test_existing_target(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(hello SOURCES main.c)
@@ -21,7 +21,7 @@ def test_existing_target(testing):
 
 def test_host_namespace_target(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(Host::hello SOURCES main.c)
@@ -33,7 +33,7 @@ def test_host_namespace_target(testing):
 
 def test_no_source(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(hello)
@@ -43,7 +43,7 @@ def test_no_source(testing):
 
 def test_unknown_source(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(hello SOURCES unknown.c)
@@ -53,7 +53,7 @@ def test_unknown_source(testing):
 
 def test_sources(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(hello SOURCES main.c hello.c)
@@ -66,7 +66,7 @@ def test_sources(testing):
 
 def test_include_directories(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(hello SOURCES main.c INCLUDE_DIRECTORIES PRIVATE first second)
@@ -78,7 +78,7 @@ def test_include_directories(testing):
 
 def test_compile_options(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(hello SOURCES main.c COMPILE_OPTIONS PRIVATE -DHELLO -DWORLD)
@@ -90,7 +90,7 @@ def test_compile_options(testing):
 
 def test_link_options(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(hello SOURCES main.c LINK_OPTIONS PRIVATE -fprofile-arcs -lm)
@@ -102,7 +102,7 @@ def test_link_options(testing):
 
 def test_link_static_libraries(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(main SOURCES main.c LINK_LIBRARIES PRIVATE Host::hello Host::world)
@@ -126,7 +126,7 @@ def test_link_static_libraries(testing):
 
 def test_link_interface_libraries(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(main SOURCES main.c LINK_LIBRARIES PRIVATE Host::hello Host::world)
@@ -145,7 +145,7 @@ def test_link_interface_libraries(testing):
 
 def test_link_libraries_with_private_options(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(main SOURCES main.c LINK_LIBRARIES PRIVATE Host::hello)
@@ -164,7 +164,7 @@ def test_link_libraries_with_private_options(testing):
 
 def test_executable_rebuild(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(main SOURCES main.c)
@@ -177,7 +177,7 @@ def test_executable_rebuild(testing):
 
 def test_include_before_project(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     include(cmake/HostBuild.cmake)
     project(CMakeTest LANGUAGES NONE)
     add_host_executable(main SOURCES main.c LINK_LIBRARIES PRIVATE Host::hello Host::world)
@@ -196,7 +196,7 @@ def test_include_before_project(testing):
 
 def test_generator_expression_options(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(main SOURCES main.c COMPILE_OPTIONS PRIVATE $<TARGET_PROPERTY:HOST-hello,HOST_INTERFACE_COMPILE_OPTIONS>)
@@ -209,7 +209,7 @@ def test_generator_expression_options(testing):
 
 def test_with_unknown_host_libraries(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(main SOURCES main.c LINK_LIBRARIES PRIVATE Host::unknown)
@@ -220,7 +220,7 @@ def test_with_unknown_host_libraries(testing):
 
 def test_with_normal_libraries(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(main SOURCES main.c LINK_LIBRARIES PRIVATE hello)
@@ -234,7 +234,7 @@ def test_with_normal_libraries(testing):
 
 def test_with_unknown_libraries(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(main SOURCES main.c LINK_LIBRARIES PRIVATE hello world)
@@ -245,7 +245,7 @@ def test_with_unknown_libraries(testing):
 
 def test_with_host_executable_as_libraries(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(main SOURCES main.c LINK_LIBRARIES PRIVATE Host::hello)
@@ -260,7 +260,7 @@ def test_with_host_executable_as_libraries(testing):
 
 def test_replace_special_characters_in_path(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(hello SOURCES "{filename}")
@@ -272,7 +272,7 @@ def test_replace_special_characters_in_path(testing):
 
 def test_cmake_host_flags(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
 
     set(CMAKE_HOSTC_FLAGS "-DHOSTC_FLAGS_1;-DHOSTC_FLAGS_2")
@@ -291,7 +291,7 @@ def test_cmake_host_flags(testing):
 
 def test_cmake_host_exe_linker_flags(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
 
     set(CMAKE_HOST_EXE_LINKER_FLAGS "-fno-common -fno-builtin")
@@ -308,7 +308,7 @@ def test_cmake_host_exe_linker_flags(testing):
 
 def test_cmake_host_include_path(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
 
     set(CMAKE_HOST_INCLUDE_PATH "/include/first;/include/second")
@@ -325,7 +325,7 @@ def test_cmake_host_include_path(testing):
 
 def test_execlude_from_all_target(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(hello SOURCES "hello.c" EXCLUDE_FROM_ALL)
@@ -337,7 +337,7 @@ def test_execlude_from_all_target(testing):
 
 def test_build_excluded_target_by_dependency(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_executable(hello SOURCES "hello.c" LINK_LIBRARIES PRIVATE Host::world)

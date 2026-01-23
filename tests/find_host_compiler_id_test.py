@@ -9,7 +9,7 @@ import pytest
 
 def test_unknown_host_compiler(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+    cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostCompilerUtilities.cmake)
     include(CMakeTestCompilerCommon)
@@ -23,7 +23,7 @@ def test_unknown_host_compiler(testing):
 
 def test_known_host_compiler(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+    cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostCompilerUtilities.cmake)
     include(CMakeTestCompilerCommon)

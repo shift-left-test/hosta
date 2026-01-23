@@ -9,8 +9,8 @@ set(HOSTA_PATCH_VERSION 0)
 set(HOSTA_VERSION ${HOSTA_MAJOR_VERSION}.${HOSTA_MINOR_VERSION}.${HOSTA_PATCH_VERSION})
 
 # Check the minimum required CMake version
-if(CMAKE_VERSION VERSION_LESS "3.16")
-  message(FATAL_ERROR "CMake 3.16 or higher is required.  You are running version ${CMAKE_VERSION}\n")
+if(CMAKE_VERSION VERSION_LESS "3.17")
+  message(FATAL_ERROR "CMake 3.17 or higher is required.  You are running version ${CMAKE_VERSION}\n")
 endif()
 
 # Set the directory of the current file
@@ -373,6 +373,7 @@ function(do_host_compile lang OUTPUT)
   string(REGEX REPLACE "[\":*?<>| ]" "_" _build_source "${_build_source}")
   set(_absolute_output "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_HOST_TARGET_PREFIX}${BUILD_TARGET}.dir/${_build_source}${CMAKE_HOST${lang}_OUTPUT_EXTENSION}")
   file(RELATIVE_PATH _relative_output ${CMAKE_CURRENT_BINARY_DIR} "${_absolute_output}")
+  file(RELATIVE_PATH _relative_gcda_output ${CMAKE_CURRENT_BINARY_DIR} "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_HOST_TARGET_PREFIX}${BUILD_TARGET}.dir/${_build_source}.gcda")
 
   # Make sure that the base directory of the object file exists
   get_filename_component(BUILD_DIRECTORY "${_absolute_output}" DIRECTORY)
@@ -392,6 +393,7 @@ function(do_host_compile lang OUTPUT)
 
   add_custom_command(
     OUTPUT ${_relative_output}
+    COMMAND ${CMAKE_COMMAND} -E rm -f -- ${_relative_gcda_output}
     COMMAND ${BUILD_COMMAND}
     DEPENDS ${BUILD_DEPENDS}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

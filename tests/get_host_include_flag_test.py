@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT
 import pytest
 
 content = '''
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.17)
 
 project(CMakeTest LANGUAGES NONE)
 
@@ -23,7 +23,7 @@ cmake_print_variables(OUTPUT)
 
 def test_with_host_languages_default(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
 
     project(CMakeTest LANGUAGES NONE)
 

@@ -18,7 +18,7 @@
 
 Ensure the following software packages are installed on your host environment:
 
-- CMake (3.16 or higher)
+- CMake (3.17 or higher)
 - C Compiler Toolchain (e.g. GCC, clang)
 - C++ Compiler Toolchain (e.g. G++, clang++)
 

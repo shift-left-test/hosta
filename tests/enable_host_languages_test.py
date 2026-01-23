@@ -9,7 +9,7 @@ import pytest
 
 def test_enable_host_languages_default(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     '''
@@ -20,7 +20,7 @@ def test_enable_host_languages_default(testing):
 
 def test_enable_host_languages_c(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     set(ENABLE_HOST_LANGUAGES C)
     include(cmake/HostBuild.cmake)
@@ -32,7 +32,7 @@ def test_enable_host_languages_c(testing):
 
 def test_enable_host_languages_cxx(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     set(ENABLE_HOST_LANGUAGES CXX)
     include(cmake/HostBuild.cmake)
@@ -44,7 +44,7 @@ def test_enable_host_languages_cxx(testing):
 
 def test_enable_host_languages_c_cxx(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     set(ENABLE_HOST_LANGUAGES C CXX)
     include(cmake/HostBuild.cmake)
@@ -56,7 +56,7 @@ def test_enable_host_languages_c_cxx(testing):
 
 def test_enable_host_languages_none(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     set(ENABLE_HOST_LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
@@ -71,7 +71,7 @@ def test_enable_host_languages_none(testing):
 
 def test_enable_host_languages_none_mixed(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     set(ENABLE_HOST_LANGUAGES C NONE CXX)
     include(cmake/HostBuild.cmake)
@@ -86,7 +86,7 @@ def test_enable_host_languages_none_mixed(testing):
 
 def test_enable_host_languages_unknown(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     set(ENABLE_HOST_LANGUAGES HELLO)
     include(cmake/HostBuild.cmake)

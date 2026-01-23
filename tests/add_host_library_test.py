@@ -9,7 +9,7 @@ import pytest
 
 def test_existing_target(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(hello STATIC SOURCES hello.c)
@@ -21,7 +21,7 @@ def test_existing_target(testing):
 
 def test_host_namespace_target(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(Host::hello STATIC SOURCES hello.c)
@@ -33,7 +33,7 @@ def test_host_namespace_target(testing):
 
 def test_unknown_type(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(hello unknown SOURCES hello.c)
@@ -44,7 +44,7 @@ def test_unknown_type(testing):
 
 def test_static_no_source(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(hello STATIC)
@@ -54,7 +54,7 @@ def test_static_no_source(testing):
 
 def test_static_unknown_source(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(hello STATIC SOURCES unknown.c)
@@ -64,7 +64,7 @@ def test_static_unknown_source(testing):
 
 def test_static_sources(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(main STATIC SOURCES hello.c world.c)
@@ -77,7 +77,7 @@ def test_static_sources(testing):
 
 def test_static_include_directories(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(hello STATIC SOURCES hello.c INCLUDE_DIRECTORIES PUBLIC first second)
@@ -89,7 +89,7 @@ def test_static_include_directories(testing):
 
 def test_static_compile_options(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(hello STATIC SOURCES hello.c COMPILE_OPTIONS PUBLIC -DHELLO)
@@ -101,7 +101,7 @@ def test_static_compile_options(testing):
 
 def test_static_link_options(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(hello STATIC SOURCES hello.c LINK_OPTIONS PUBLIC -fprofile-arcs -lm)
@@ -113,7 +113,7 @@ def test_static_link_options(testing):
 
 def test_static_link_static_libraries(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(main STATIC SOURCES main.c LINK_LIBRARIES PRIVATE Host::hello Host::world)
@@ -137,7 +137,7 @@ def test_static_link_static_libraries(testing):
 
 def test_static_link_interface_libraries(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(main STATIC SOURCES main.c LINK_LIBRARIES PRIVATE Host::hello Host::world)
@@ -156,7 +156,7 @@ def test_static_link_interface_libraries(testing):
 
 def test_static_link_libraries_with_private_options(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(main STATIC SOURCES main.c LINK_LIBRARIES PRIVATE Host::hello)
@@ -175,7 +175,7 @@ def test_static_link_libraries_with_private_options(testing):
 
 def test_static_rebuild(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(hello STATIC SOURCES hello.c)
@@ -188,7 +188,7 @@ def test_static_rebuild(testing):
 
 def test_interface_sources(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(hello INTERFACE SOURCES hello.c)
@@ -199,7 +199,7 @@ def test_interface_sources(testing):
 
 def test_interface_include_directories(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(CMakePrintHelpers)
     include(cmake/HostBuild.cmake)
@@ -215,7 +215,7 @@ def test_interface_include_directories(testing):
 
 def test_interface_compile_options(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(CMakePrintHelpers)
     include(cmake/HostBuild.cmake)
@@ -231,7 +231,7 @@ def test_interface_compile_options(testing):
 
 def test_interface_link_options(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(CMakePrintHelpers)
     include(cmake/HostBuild.cmake)
@@ -247,7 +247,7 @@ def test_interface_link_options(testing):
 
 def test_interface_link_static_libraries(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(main INTERFACE LINK_LIBRARIES PRIVATE Host::hello Host::world)
@@ -270,7 +270,7 @@ def test_interface_link_static_libraries(testing):
 
 def test_interface_link_interface_libraries(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(main INTERFACE LINK_LIBRARIES PRIVATE Host::hello Host::world)
@@ -288,7 +288,7 @@ def test_interface_link_interface_libraries(testing):
 
 def test_interface_link_libraries_with_private_options(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(main INTERFACE LINK_LIBRARIES PRIVATE Host::hello)
@@ -306,7 +306,7 @@ def test_interface_link_libraries_with_private_options(testing):
 
 def test_cmake_host_flags(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
 
     set(CMAKE_HOSTC_FLAGS "-DHOSTC_FLAGS_1;-DHOSTC_FLAGS_2")
@@ -325,7 +325,7 @@ def test_cmake_host_flags(testing):
 
 def test_cmake_host_static_linker_flags(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
 
     set(CMAKE_HOST_STATIC_LINKER_FLAGS "-fno-common -fno-builtin")
@@ -342,7 +342,7 @@ def test_cmake_host_static_linker_flags(testing):
 
 def test_cmake_host_include_path(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
 
     set(CMAKE_HOST_INCLUDE_PATH "/include/first;/include/second")
@@ -359,7 +359,7 @@ def test_cmake_host_include_path(testing):
 
 def test_execlude_from_all_target(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(hello STATIC SOURCES "hello.c" EXCLUDE_FROM_ALL)
@@ -371,7 +371,7 @@ def test_execlude_from_all_target(testing):
 
 def test_build_excluded_target_by_dependency(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     add_host_library(hello STATIC SOURCES "hello.c" LINK_LIBRARIES PRIVATE Host::world)

@@ -9,7 +9,7 @@ import pytest
 
 def test_unknown_file(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     find_and_copy_file({file} {source_dir} {dest_dir})
@@ -19,7 +19,7 @@ def test_unknown_file(testing):
 
 def test_existing_dest_file(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     find_and_copy_file({file} {source_dir} {dest_dir})
@@ -31,7 +31,7 @@ def test_existing_dest_file(testing):
 
 def test_copying_file(testing):
     content = '''
-    cmake_minimum_required(VERSION 3.16)
+    cmake_minimum_required(VERSION 3.17)
     project(CMakeTest LANGUAGES NONE)
     include(cmake/HostBuild.cmake)
     find_and_copy_file({file} {source_dir} {dest_dir})
