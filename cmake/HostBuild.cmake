@@ -662,6 +662,12 @@ function(add_host_library TARGET TYPE)
 
     set(_filename "${CMAKE_HOST_STATIC_LIBRARY_PREFIX}${TARGET}${CMAKE_HOST_STATIC_LIBRARY_SUFFIX}")
     set(_output "${CMAKE_CURRENT_BINARY_DIR}/${_filename}")
+    set(_response_file "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_HOST_TARGET_PREFIX}${_filename}.dir/${_filename}.rsp")
+
+    file(GENERATE
+      OUTPUT ${_response_file}
+      CONTENT "$<JOIN:${_objects},\n>"
+    )
 
     if(NOT CMAKE_HOST_AR)
       set(CMAKE_HOST_AR "${CMAKE_HOST${lang}_AR}")
@@ -673,7 +679,7 @@ function(add_host_library TARGET TYPE)
     # Archive object files to create a static library
     add_custom_command(
       OUTPUT ${_output}
-      COMMAND ${CMAKE_HOST_AR} rc ${_output} ${_objects}
+      COMMAND ${CMAKE_HOST_AR} rc ${_output} @${_response_file}
       COMMAND ${CMAKE_HOST_RANLIB} ${_output}
       DEPENDS ${_objects} ${BUILD_DEPENDS}
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

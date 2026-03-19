@@ -382,3 +382,16 @@ def test_build_excluded_target_by_dependency(testing):
     testing.write("world.c", "int world() { return 0; }")
     testing.configure_internal().check_returncode()
     assert 'Linking HOSTC static library libworld.a' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_build_library_generates_response_file(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello STATIC SOURCES "hello.c")
+    '''
+    testing.write("CMakeLists.txt", content)
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    assert testing.exists("CMakeFiles/HOST-libhello.a.dir/libhello.a.rsp")
