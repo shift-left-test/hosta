@@ -114,6 +114,11 @@ define_property(TARGET PROPERTY HOST_INTERFACE_LINK_OPTIONS
   FULL_DOCS "List of link options for host targets"
 )
 
+define_property(TARGET PROPERTY HOST_BINARY_DIR
+  BRIEF_DOCS "Binary directory where the host target is built"
+  FULL_DOCS "Binary directory where the host target is built"
+)
+
 define_property(TARGET PROPERTY HOST_VERSION
   BRIEF_DOCS "Version of the host target"
   FULL_DOCS "Version of the host target"
@@ -174,7 +179,7 @@ function(set_host_target_property TARGET PROPERTY VALUE)
 endfunction(set_host_target_property)
 
 function(set_host_target_properties TARGET)
-  set(oneValueArgs NAME OUTPUT_NAME TYPE VERSION SOVERSION)
+  set(oneValueArgs NAME OUTPUT_NAME TYPE BINARY_DIR VERSION SOVERSION)
   set(multiValueArgs SOURCES INTERFACE_INCLUDE_DIRECTORIES INTERFACE_COMPILE_OPTIONS INTERFACE_LINK_OPTIONS)
   cmake_parse_arguments(ARG "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -596,9 +601,6 @@ function(add_host_executable TARGET)
     # Add static library paths as link option
     # Note: $<TARGET_PROPERTY:tgt,prop>: Non-existing libraries cause build failures
     list(APPEND _extra_link_options "$<$<BOOL:$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_STATIC>>:$<TARGET_PROPERTY:${_lib},HOST_OUTPUT_NAME>>")
-    # Add shared library link flags: -L<dir> -l<name>
-    list(APPEND _extra_link_options "$<$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_SHARED>:-L${CMAKE_CURRENT_BINARY_DIR}>")
-    list(APPEND _extra_link_options "$<$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_SHARED>:-l$<TARGET_PROPERTY:${_lib},HOST_NAME>>")
   endforeach()
 
   if(NOT BUILD_SOURCES)
@@ -644,7 +646,7 @@ function(add_host_executable TARGET)
   # Add RPATH for shared library dependencies
   if(NOT CMAKE_HOST_SKIP_BUILD_RPATH)
     foreach(_lib IN LISTS BUILD_LINK_LIBRARIES)
-      list(APPEND _extra_link_options "$<$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_SHARED>:${CMAKE_HOST${lang}_SHARED_LIBRARY_RUNTIME_FLAG}${CMAKE_CURRENT_BINARY_DIR}>")
+      list(APPEND _extra_link_options "$<$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_SHARED>:${CMAKE_HOST${lang}_SHARED_LIBRARY_RUNTIME_FLAG}$<TARGET_PROPERTY:${_lib},HOST_BINARY_DIR>>")
     endforeach()
   endif()
 
@@ -725,9 +727,6 @@ function(add_host_library TARGET TYPE)
     list(APPEND _extra_dependencies "${CMAKE_HOST_TARGET_PREFIX}$<TARGET_PROPERTY:${_lib},HOST_NAME>")
     # Add static library paths as link option
     list(APPEND _extra_link_options "$<$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_STATIC>:$<TARGET_PROPERTY:${_lib},HOST_OUTPUT_NAME>>")
-    # Add shared library link flags: -L<dir> -l<name>
-    list(APPEND _extra_link_options "$<$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_SHARED>:-L${CMAKE_CURRENT_BINARY_DIR}>")
-    list(APPEND _extra_link_options "$<$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_SHARED>:-l$<TARGET_PROPERTY:${_lib},HOST_NAME>>")
   endforeach()
 
   set(BUILD_TYPE "HOST_${TYPE}")
@@ -871,6 +870,13 @@ function(add_host_library TARGET TYPE)
       DEPENDS "${BUILD_DEPENDS}" "${_extra_dependencies}"
     )
     add_host_custom_target("${CMAKE_HOST_NAMESPACE_PREFIX}${TARGET}" DEPENDS "${_output}")
+
+    # Register shared library link flags in INTERFACE so consumers
+    # automatically get the correct -L/-l regardless of their directory scope
+    list(APPEND BUILD_INTERFACE_LINK_OPTIONS
+      "-L${CMAKE_CURRENT_BINARY_DIR}"
+      "-l${TARGET}"
+    )
   elseif(BUILD_TYPE STREQUAL "HOST_INTERFACE")
     if(BUILD_SOURCES)
       host_logging_error("add_host_library INTERFACE requires no source arguments.")
@@ -889,6 +895,7 @@ function(add_host_library TARGET TYPE)
     NAME "${TARGET}"
     OUTPUT_NAME "${_output}"
     TYPE "${BUILD_TYPE}"
+    BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}"
     SOURCES "${BUILD_SOURCES}"
     INTERFACE_INCLUDE_DIRECTORIES "${BUILD_INTERFACE_INCLUDE_DIRECTORIES}"
     INTERFACE_COMPILE_OPTIONS "${BUILD_INTERFACE_COMPILE_OPTIONS}"

@@ -6,6 +6,7 @@
 
 - [About](#about)
 - [Quick Start](#quick-start)
+- [Sample Project](#sample-project)
 - [Prerequisites](#prerequisites)
 - [Setup Instructions](#setup-instructions)
 - [Usage](#usage)
@@ -18,7 +19,6 @@
   - [Unity Fixture Tests](#adding-an-executable-as-tests-for-unity-fixture-test-macros)
   - [Google Test](#adding-an-executable-as-tests-with-ctest-for-google-test-macros)
 - [CMake Variables](#cmake-variables)
-- [Building the Sample Project](#building-the-sample-project)
 - [Testing the CMake Scripts](#testing-the-cmake-scripts)
 - [License](#license)
 
@@ -73,6 +73,65 @@ cmake -S . -B build
 cmake --build build --target host-targets
 cd build && ctest
 ```
+
+## Sample Project
+
+The `sample/` directory contains an **expression calculator** that demonstrates all major hosta features in a realistic project. It parses and evaluates mathematical expressions like `"1 + 2 * (3 - 4)"`.
+
+### Project Structure
+
+```cmake
+# INTERFACE library: shared error types (header-only)
+add_host_library(error INTERFACE
+  INCLUDE_DIRECTORIES PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/error
+)
+
+# STATIC library: tokenizer
+add_host_library(tokenizer STATIC
+  SOURCES tokenizer/tokenizer.c
+  INCLUDE_DIRECTORIES PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tokenizer
+  LINK_LIBRARIES PUBLIC Host::error
+)
+
+# SHARED library: evaluator (with versioning)
+add_host_library(eval SHARED
+  SOURCES evaluator/evaluator.c
+  INCLUDE_DIRECTORIES PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/evaluator
+  LINK_LIBRARIES PUBLIC Host::parser Host::tokenizer Host::error
+  VERSION 1.0.0
+  SOVERSION 1
+)
+
+# Host executable
+add_host_executable(calc
+  SOURCES calculator/main.c
+  LINK_LIBRARIES PRIVATE Host::eval Host::parser Host::tokenizer Host::error
+)
+```
+
+### Features Demonstrated
+
+| Library Type | Target | Description |
+|-------------|--------|-------------|
+| `INTERFACE` | `error` | Shared error types (header-only) |
+| `STATIC` | `tokenizer`, `parser` | Static archives for tokenization and parsing |
+| `SHARED` | `eval` (VERSION 1.0.0) | Shared library with versioning and soname |
+
+Tests cover all three supported frameworks:
+- **Unity** — tokenizer unit tests (`add_host_test`)
+- **Unity Fixture** — parser tests with groups (`unity_fixture_add_host_tests`)
+- **Google Test** — evaluator and end-to-end integration tests (`gtest_add_host_tests`)
+
+### Building and Running
+
+```bash
+cd sample
+cmake -S . -B build
+cmake --build build --target host-targets
+cd build && ctest --output-on-failure
+```
+
+See [`sample/README.md`](sample/README.md) for full documentation.
 
 ## Prerequisites
 
@@ -364,34 +423,6 @@ The following CMake variables can be used to configure internal behaviors. `${la
 | Variable | Description |
 |----------|-------------|
 | `ENABLE_HOST_UNITY_FIXTURE_EXACT_MATCH` | Only run tests whose group and name exactly match the specified value. Requires `-G` and `-N` options provided by Unity fixture. Disabled by default for backward compatibility. |
-
-## Sample Project
-
-The `sample/` directory contains an **expression calculator** that demonstrates all major hosta features in a realistic project. It parses and evaluates mathematical expressions like `"1 + 2 * (3 - 4)"`.
-
-### Features Demonstrated
-
-| Library Type | Target | Description |
-|-------------|--------|-------------|
-| `INTERFACE` | `error` | Shared error types (header-only) |
-| `STATIC` | `tokenizer`, `parser` | Static archives for tokenization and parsing |
-| `SHARED` | `eval` (VERSION 1.0.0) | Shared library with versioning and soname |
-
-Tests cover all three supported frameworks:
-- **Unity** — tokenizer unit tests (`add_host_test`)
-- **Unity Fixture** — parser tests with groups (`unity_fixture_add_host_tests`)
-- **Google Test** — evaluator and end-to-end integration tests (`gtest_add_host_tests`)
-
-### Building and Running
-
-```bash
-cd sample
-cmake -S . -B build
-cmake --build build --target host-targets
-cd build && ctest --output-on-failure
-```
-
-See [`sample/README.md`](sample/README.md) for full documentation.
 
 ## Testing the CMake Scripts
 
