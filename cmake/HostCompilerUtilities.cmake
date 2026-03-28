@@ -291,7 +291,7 @@ function(find_host_binutils lang)
 
   # Remove "llvm-" prefix if exists
   if(toolchain_prefix MATCHES "(.+-)?llvm-$")
-    set(toolchain_prefix ${CMAKE_PATCH_1})
+    set(toolchain_prefix ${CMAKE_MATCH_1})
   endif()
 
   # Try searching for binutils located in the same directory as the host compiler

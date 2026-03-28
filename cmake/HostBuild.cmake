@@ -95,13 +95,13 @@ define_property(TARGET PROPERTY HOST_OUTPUT_NAME
 )
 
 define_property(TARGET PROPERTY HOST_SOURCES
-  BRIEF_DOCS "List of sources files for host targets"
+  BRIEF_DOCS "List of source files for host targets"
   FULL_DOCS "List of source files for host targets"
 )
 
 define_property(TARGET PROPERTY HOST_INTERFACE_INCLUDE_DIRECTORIES
   BRIEF_DOCS "List of include directories for host targets"
-  FULL_DOCS "List of include_directories for host targets"
+  FULL_DOCS "List of include directories for host targets"
 )
 
 define_property(TARGET PROPERTY HOST_INTERFACE_COMPILE_OPTIONS
@@ -111,7 +111,7 @@ define_property(TARGET PROPERTY HOST_INTERFACE_COMPILE_OPTIONS
 
 define_property(TARGET PROPERTY HOST_INTERFACE_LINK_OPTIONS
   BRIEF_DOCS "List of link options for host targets"
-  FULL_DOCS "List of link optiosn for host targets"
+  FULL_DOCS "List of link options for host targets"
 )
 
 function(get_host_target_property VARIABLE TARGET PROPERTY)

@@ -16,7 +16,7 @@ function(add_command NAME)
   set(script "${script}${NAME}(${_args})\n" PARENT_SCOPE)
 endfunction()
 
-# Check if the test executbale exists
+# Check if the test executable exists
 if(NOT EXISTS "${TEST_EXECUTABLE}")
   message(FATAL_ERROR
     "Specified test executable does not exist.\n"

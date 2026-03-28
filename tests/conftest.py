@@ -79,7 +79,7 @@ class CMakeFixture(object):
         Path(os.path.join(self.workspace, path)).touch()
 
     def copy(self, source, destination):
-        shutil.copy2(f'{self.root}/{source}', f'{self.workspace}/{destination}')
+        shutil.copy2(f'{self.rootdir}/{source}', f'{self.workspace}/{destination}')
 
     def copytree(self, source, destination):
         shutil.copytree(f'{self.rootdir}/{source}', f'{self.workspace}/{destination}', dirs_exist_ok=True)
