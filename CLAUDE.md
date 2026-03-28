@@ -35,7 +35,7 @@ docker run --rm -it -v `pwd`:/test host-test-dev
 
 The framework is a pipeline: compiler detection -> compilation -> linking -> test registration.
 
-- **HostBuild.cmake** — Main entry point. Provides `add_host_executable()` and `add_host_library()`. Handles object compilation, linking, dependency resolution, and custom target properties (`HOST_TYPE`, `HOST_NAME`, `HOST_SOURCES`, etc.). Uses `Host::` namespace prefix for targets, `HOST-` prefix internally.
+- **HostBuild.cmake** — Main entry point. Provides `add_host_executable()` and `add_host_library()` (STATIC, SHARED, INTERFACE). Handles object compilation, linking, dependency resolution, shared library versioning (VERSION/SOVERSION with soname and symlinks), RPATH management, and custom target properties (`HOST_TYPE`, `HOST_NAME`, `HOST_SOURCES`, etc.). Uses `Host::` namespace prefix for targets, `HOST-` prefix internally.
 - **HostTest.cmake** — Test integration layer. Provides `add_host_test()`, `unity_fixture_add_host_tests()`, `unity_fixture_discover_host_tests()`, `gtest_add_host_tests()`, `gtest_discover_host_tests()`. Registers tests with CTest.
 - **HostCompilerUtilities.cmake** — Shared utilities: logging, compiler detection helpers, ABI compatibility, file dependency resolution, include flag generation.
 - **DetermineHOSTCCompiler.cmake / DetermineHOSTCXXCompiler.cmake** — Auto-detect host C/C++ compilers independent of the cross-compilation toolchain.

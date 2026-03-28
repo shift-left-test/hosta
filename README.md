@@ -11,6 +11,8 @@
 - [Usage](#usage)
   - [Creating an Executable](#creating-an-executable-for-the-host-platform)
   - [Creating a Library](#creating-a-library-for-the-host-platform)
+    - [Library Types](#library-types)
+    - [Shared Library Example](#shared-library-example)
   - [Host Target Dependencies](#host-target-dependencies)
   - [Adding Tests with CTest](#adding-an-executable-as-a-test-with-ctest)
   - [Unity Fixture Tests](#adding-an-executable-as-tests-for-unity-fixture-test-macros)
@@ -30,6 +32,8 @@ In cross-compilation environments (e.g., building for ARM with `arm-none-eabi-gc
 
 - Automatic host compiler detection independent of the cross-compilation toolchain
 - Dual-targeting: cross-compile for the target platform and build tests for the host in one build
+- Static, shared, and interface host libraries with full dependency management
+- Shared library versioning (VERSION/SOVERSION), soname, and automatic RPATH handling
 - Integration with [Unity](https://github.com/ThrowTheSwitch/Unity) and [Google Test](https://github.com/google/googletest) frameworks
 - Test registration and execution through CTest
 
@@ -151,6 +155,8 @@ add_host_library(<target> <type>
   [LINK_OPTIONS <PRIVATE|PUBLIC> <link_option>...]
   [LINK_LIBRARIES <PRIVATE|PUBLIC> <library>...]
   [DEPENDS <depend>...]
+  [VERSION <version>]
+  [SOVERSION <soversion>]
   [EXCLUDE_FROM_ALL]
 )
 ```
@@ -158,16 +164,49 @@ add_host_library(<target> <type>
 | Parameter | Description |
 |-----------|-------------|
 | `target` | Name of the library target |
-| `type` | Type of the library (`STATIC` or `INTERFACE`) |
+| `type` | Type of the library (`STATIC`, `SHARED`, or `INTERFACE`) |
 | `SOURCES` | List of source files (`INTERFACE` library requires no source files) |
 | `INCLUDE_DIRECTORIES` | List of include directories |
 | `COMPILE_OPTIONS` | List of compile options |
 | `LINK_OPTIONS` | List of link options |
 | `LINK_LIBRARIES` | List of host libraries |
 | `DEPENDS` | List of dependencies |
+| `VERSION` | Library version for `SHARED` libraries (e.g., `1.2.3`) |
+| `SOVERSION` | SO version for `SHARED` libraries (e.g., `1`) |
 | `EXCLUDE_FROM_ALL` | Do not include the binary in the default build target |
 
 > **Scope:** Arguments following both `PRIVATE` and `PUBLIC` are used to build the current target. Arguments following `PUBLIC` are also used to build another target that links to the current target.
+
+#### Library Types
+
+| Type | Description |
+|------|-------------|
+| `STATIC` | A static archive (`.a`). Requires `SOURCES`. |
+| `SHARED` | A shared library (`.so`/`.dylib`/`.dll`). Requires `SOURCES`. Automatically compiles with position-independent code (`-fPIC`). Supports `VERSION` and `SOVERSION` for soname and symlink management. |
+| `INTERFACE` | A header-only library. Does not require `SOURCES`. Only `PUBLIC` properties are used. |
+
+#### Shared Library Example
+
+```cmake
+add_host_library(mylib SHARED
+  SOURCES src/mylib.c
+  INCLUDE_DIRECTORIES PUBLIC src
+  VERSION 1.2.3
+  SOVERSION 1
+)
+
+add_host_executable(mylib_test
+  SOURCES test/mylib_test.c
+  LINK_LIBRARIES PRIVATE Host::mylib
+)
+```
+
+When `VERSION` and `SOVERSION` are specified, the build produces:
+- `libmylib.so.1.2.3` — the actual shared library
+- `libmylib.so.1` — soname symlink
+- `libmylib.so` — development symlink
+
+RPATH is automatically set so that executables linked against host shared libraries can find them at runtime.
 
 ### Host Target Dependencies
 
@@ -304,9 +343,14 @@ The following CMake variables can be used to configure internal behaviors. `${la
 |----------|-------------|
 | `CMAKE_HOST_EXE_LINKER_FLAGS` | Global linker flags for executables |
 | `CMAKE_HOST_STATIC_LINKER_FLAGS` | Global linker flags for static libraries |
+| `CMAKE_HOST_SHARED_LINKER_FLAGS` | Global linker flags for shared libraries |
 | `CMAKE_HOST_EXECUTABLE_SUFFIX` | Extension for executable files |
 | `CMAKE_HOST_STATIC_LIBRARY_PREFIX` | Prefix for static libraries |
 | `CMAKE_HOST_STATIC_LIBRARY_SUFFIX` | Extension for static libraries |
+| `CMAKE_HOST_SHARED_LIBRARY_PREFIX` | Prefix for shared libraries |
+| `CMAKE_HOST_SHARED_LIBRARY_SUFFIX` | Extension for shared libraries |
+| `CMAKE_HOST_SKIP_BUILD_RPATH` | If set, do not add build directory RPATH for shared library dependencies |
+| `CMAKE_HOST_BUILD_RPATH` | Custom RPATH to embed in host executables |
 
 ### Build Configuration
 
