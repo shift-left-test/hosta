@@ -761,3 +761,4 @@ unity_fixture_test
 unity_test
 *.vcxproj*
 *.sln
+docs/

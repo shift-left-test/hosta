@@ -52,3 +52,24 @@ def test_known_host_compiler(testing):
     assert 'CMAKE_INCLUDE_SYSTEM_FLAG_HOSTC: -isystem' in stdout
     assert 'CMAKE_HOSTC90_STANDARD_COMPILE_OPTION: -std=c90' in stdout
     assert 'CMAKE_HOSTC90_EXTENSION_COMPILE_OPTION: -std=gnu90' in stdout
+
+def test_shared_library_variables(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostCompilerUtilities.cmake)
+    include(CMakeTestCompilerCommon)
+    set(CMAKE_HOSTC_COMPILER_LIST "gcc")
+    find_host_compiler(C)
+    find_host_compiler_id(C "-c" "-Aa" "-D__CLASSIC_C__")
+    message(STATUS "CMAKE_HOSTC_COMPILE_OPTIONS_PIC: ${CMAKE_HOSTC_COMPILE_OPTIONS_PIC}")
+    message(STATUS "CMAKE_HOSTC_SHARED_LIBRARY_CREATE_FLAGS: ${CMAKE_HOSTC_SHARED_LIBRARY_CREATE_FLAGS}")
+    message(STATUS "CMAKE_HOSTC_SHARED_LIBRARY_SONAME_FLAG: ${CMAKE_HOSTC_SHARED_LIBRARY_SONAME_FLAG}")
+    message(STATUS "CMAKE_HOSTC_SHARED_LIBRARY_RUNTIME_FLAG: ${CMAKE_HOSTC_SHARED_LIBRARY_RUNTIME_FLAG}")
+    '''
+    testing.write("CMakeLists.txt", content)
+    stdout = testing.configure_internal().stdout
+    assert 'CMAKE_HOSTC_COMPILE_OPTIONS_PIC: -fPIC' in stdout
+    assert 'CMAKE_HOSTC_SHARED_LIBRARY_CREATE_FLAGS: -shared' in stdout
+    assert 'CMAKE_HOSTC_SHARED_LIBRARY_SONAME_FLAG: -Wl,-soname,' in stdout
+    assert 'CMAKE_HOSTC_SHARED_LIBRARY_RUNTIME_FLAG: -Wl,-rpath,' in stdout

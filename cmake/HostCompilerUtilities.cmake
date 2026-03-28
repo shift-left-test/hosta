@@ -42,6 +42,12 @@ function(save_host_compiler_preferences lang)
     "set(CMAKE_HOST${lang}_STATIC_LIBRARY_SUFFIX \"@CMAKE_HOST${lang}_STATIC_LIBRARY_SUFFIX@\")\n"
     "set(CMAKE_HOST${lang}_AR \"@CMAKE_HOST${lang}_AR@\")\n"
     "set(CMAKE_HOST${lang}_RANLIB \"@CMAKE_HOST${lang}_RANLIB@\")\n"
+    "set(CMAKE_HOST${lang}_SHARED_LIBRARY_PREFIX \"@CMAKE_HOST${lang}_SHARED_LIBRARY_PREFIX@\")\n"
+    "set(CMAKE_HOST${lang}_SHARED_LIBRARY_SUFFIX \"@CMAKE_HOST${lang}_SHARED_LIBRARY_SUFFIX@\")\n"
+    "set(CMAKE_HOST${lang}_COMPILE_OPTIONS_PIC \"@CMAKE_HOST${lang}_COMPILE_OPTIONS_PIC@\")\n"
+    "set(CMAKE_HOST${lang}_SHARED_LIBRARY_SONAME_FLAG \"@CMAKE_HOST${lang}_SHARED_LIBRARY_SONAME_FLAG@\")\n"
+    "set(CMAKE_HOST${lang}_SHARED_LIBRARY_RUNTIME_FLAG \"@CMAKE_HOST${lang}_SHARED_LIBRARY_RUNTIME_FLAG@\")\n"
+    "set(CMAKE_HOST${lang}_SHARED_LIBRARY_CREATE_FLAGS \"@CMAKE_HOST${lang}_SHARED_LIBRARY_CREATE_FLAGS@\")\n"
   )
 
   # Guess the supported language standard versions based on C and CXX
@@ -139,6 +145,12 @@ function(find_host_compiler_id lang)
   set(CMAKE_INCLUDE_FLAG_HOST${lang} "${CMAKE_INCLUDE_FLAG_${lang}}" PARENT_SCOPE)
   set(CMAKE_INCLUDE_SYSTEM_FLAG_HOST${lang} "${CMAKE_INCLUDE_SYSTEM_FLAG_${lang}}" PARENT_SCOPE)
 
+  # Set shared library flags from compiler detection
+  set(CMAKE_HOST${lang}_COMPILE_OPTIONS_PIC "${CMAKE_${lang}_COMPILE_OPTIONS_PIC}" PARENT_SCOPE)
+  set(CMAKE_HOST${lang}_SHARED_LIBRARY_CREATE_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_${lang}_FLAGS}" PARENT_SCOPE)
+  set(CMAKE_HOST${lang}_SHARED_LIBRARY_SONAME_FLAG "${CMAKE_SHARED_LIBRARY_SONAME_${lang}_FLAG}" PARENT_SCOPE)
+  set(CMAKE_HOST${lang}_SHARED_LIBRARY_RUNTIME_FLAG "${CMAKE_SHARED_LIBRARY_RUNTIME_${lang}_FLAG}" PARENT_SCOPE)
+
   # Guess the supported language standard versions based on C and CXX
   list(APPEND versions 90 98 99 03 11 14 17 20 23 26)
 
@@ -202,6 +214,24 @@ function(set_host_platform_default_options lang)
       set(CMAKE_HOST${lang}_STATIC_LIBRARY_SUFFIX ".lib" PARENT_SCOPE)
     else()
       set(CMAKE_HOST${lang}_STATIC_LIBRARY_SUFFIX ".a" PARENT_SCOPE)
+    endif()
+  endif()
+
+  # Set default shared library prefix
+  if(NOT CMAKE_HOST${lang}_SHARED_LIBRARY_PREFIX)
+    if(CMAKE_HOST${lang}_PLATFORM_ID STREQUAL "Linux")
+      set(CMAKE_HOST${lang}_SHARED_LIBRARY_PREFIX "lib" PARENT_SCOPE)
+    else()
+      set(CMAKE_HOST${lang}_SHARED_LIBRARY_PREFIX "" PARENT_SCOPE)
+    endif()
+  endif()
+
+  # Set default shared library suffix
+  if(NOT CMAKE_HOST${lang}_SHARED_LIBRARY_SUFFIX)
+    if(CMAKE_HOST${lang}_PLATFORM_ID MATCHES "CYGWIN.*|Cygwin|MinGW|Windows")
+      set(CMAKE_HOST${lang}_SHARED_LIBRARY_SUFFIX ".dll" PARENT_SCOPE)
+    else()
+      set(CMAKE_HOST${lang}_SHARED_LIBRARY_SUFFIX ".so" PARENT_SCOPE)
     endif()
   endif()
 

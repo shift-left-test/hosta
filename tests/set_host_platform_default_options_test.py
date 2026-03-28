@@ -25,6 +25,8 @@ cmake_print_variables(
   CMAKE_HOSTC_EXECUTABLE_SUFFIX
   CMAKE_HOSTC_STATIC_LIBRARY_PREFIX
   CMAKE_HOSTC_STATIC_LIBRARY_SUFFIX
+  CMAKE_HOSTC_SHARED_LIBRARY_PREFIX
+  CMAKE_HOSTC_SHARED_LIBRARY_SUFFIX
   CMAKE_GENERATOR
 )
 '''
@@ -72,3 +74,27 @@ def test_windows(testing):
     assert 'CMAKE_HOSTC_EXECUTABLE_SUFFIX=".exe"' in stdout
     assert 'CMAKE_HOSTC_STATIC_LIBRARY_PREFIX=""' in stdout
     assert 'CMAKE_HOSTC_STATIC_LIBRARY_SUFFIX=".lib"' in stdout
+
+def test_linux_shared_library_defaults(testing):
+    testing.write("CMakeLists.txt", content.format(compiler="Clang", platform="Linux", generator="Ninja"))
+    stdout = testing.configure_internal().stdout
+    assert 'CMAKE_HOSTC_SHARED_LIBRARY_PREFIX="lib"' in stdout
+    assert 'CMAKE_HOSTC_SHARED_LIBRARY_SUFFIX=".so"' in stdout
+
+def test_cygwin_shared_library_defaults(testing):
+    testing.write("CMakeLists.txt", content.format(compiler="Clang", platform="CYGWIN", generator="Ninja"))
+    stdout = testing.configure_internal().stdout
+    assert 'CMAKE_HOSTC_SHARED_LIBRARY_PREFIX=""' in stdout
+    assert 'CMAKE_HOSTC_SHARED_LIBRARY_SUFFIX=".dll"' in stdout
+
+def test_mingw_shared_library_defaults(testing):
+    testing.write("CMakeLists.txt", content.format(compiler="Clang", platform="MinGW", generator="Ninja"))
+    stdout = testing.configure_internal().stdout
+    assert 'CMAKE_HOSTC_SHARED_LIBRARY_PREFIX=""' in stdout
+    assert 'CMAKE_HOSTC_SHARED_LIBRARY_SUFFIX=".dll"' in stdout
+
+def test_windows_shared_library_defaults(testing):
+    testing.write("CMakeLists.txt", content.format(compiler="Clang", platform="Windows", generator="Ninja"))
+    stdout = testing.configure_internal().stdout
+    assert 'CMAKE_HOSTC_SHARED_LIBRARY_PREFIX=""' in stdout
+    assert 'CMAKE_HOSTC_SHARED_LIBRARY_SUFFIX=".dll"' in stdout

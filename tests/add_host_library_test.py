@@ -394,3 +394,277 @@ def test_build_library_generates_response_file(testing):
     testing.configure_internal().check_returncode()
     testing.cmake("host-targets").check_returncode()
     assert testing.exists("CMakeFiles/HOST-libhello.a.dir/libhello.a.rsp")
+
+def test_shared_no_source(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED)
+    '''
+    testing.write("CMakeLists.txt", content)
+    assert 'No SOURCES given to target: hello' in testing.configure_internal().stderr
+
+def test_shared_unknown_source(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES unknown.c)
+    '''
+    testing.write("CMakeLists.txt", content)
+    assert 'Cannot find source file:\n\n    unknown.c' in testing.configure_internal().stderr
+
+def test_shared_sources(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES hello.c)
+    '''
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    assert 'Linking HOSTC shared library libhello.so' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_shared_host_namespace_target(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(Host::hello SHARED SOURCES hello.c)
+    '''
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    assert 'Linking HOSTC shared library libhello.so' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_shared_rebuild(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES hello.c)
+    '''
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    assert 'Linking HOSTC shared library' in testing.cmake("host-targets").stdout
+    assert not 'Linking HOSTC shared library' in testing.cmake("host-targets").stdout
+
+def test_shared_pic_flag(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES hello.c)
+    '''
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    assert '-fPIC' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_shared_include_directories(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES hello.c INCLUDE_DIRECTORIES PUBLIC first second)
+    '''
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    assert f'-I{testing.workspace}/first -I{testing.workspace}/second' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_shared_compile_options(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES hello.c COMPILE_OPTIONS PUBLIC -DHELLO)
+    '''
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    assert '-DHELLO' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_shared_exclude_from_all(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES "hello.c" EXCLUDE_FROM_ALL)
+    '''
+    testing.write("CMakeLists.txt", content)
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.configure_internal().check_returncode()
+    assert 'Nothing to be done' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_shared_version(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES hello.c VERSION 1.2.3)
+    '''
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    assert testing.exists("libhello.so.1.2.3")
+    assert testing.exists("libhello.so")
+
+def test_shared_soversion(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES hello.c SOVERSION 4)
+    '''
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    assert testing.exists("libhello.so.4")
+    assert testing.exists("libhello.so")
+
+def test_shared_version_soversion(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES hello.c VERSION 1.2.3 SOVERSION 4)
+    '''
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    assert testing.exists("libhello.so.1.2.3")
+    assert testing.exists("libhello.so.4")
+    assert testing.exists("libhello.so")
+
+def test_executable_link_shared_library(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_executable(main
+      SOURCES main.c
+      LINK_LIBRARIES PRIVATE Host::hello
+    )
+    add_host_library(hello SHARED
+      SOURCES hello/hello.c
+      INCLUDE_DIRECTORIES PUBLIC hello
+      COMPILE_OPTIONS PUBLIC -DHELLO
+      LINK_OPTIONS PUBLIC -lm
+    )
+    '''
+    testing.write("CMakeLists.txt", content)
+    testing.write("main.c", '#include "hello.h"\nint main() { hello(); return 0; }')
+    testing.write("hello/hello.h", "void hello();")
+    testing.write("hello/hello.c", '#include "hello.h"\nvoid hello() { }')
+    testing.configure_internal().check_returncode()
+    process = testing.cmake("host-targets", verbose=True)
+    process.check_returncode()
+    stdout = process.stdout
+    assert f'-I{testing.workspace}/hello' in stdout
+    assert '-DHELLO' in stdout
+    assert f'-L{testing.build}' in stdout
+    assert '-lhello' in stdout
+    assert '-lm' in stdout
+
+def test_shared_link_shared_library(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(world SHARED
+      SOURCES world.c
+      LINK_LIBRARIES PRIVATE Host::hello
+    )
+    add_host_library(hello SHARED
+      SOURCES hello/hello.c
+      INCLUDE_DIRECTORIES PUBLIC hello
+      COMPILE_OPTIONS PUBLIC -DHELLO
+    )
+    '''
+    testing.write("CMakeLists.txt", content)
+    testing.write("hello/hello.h", "void hello();")
+    testing.write("hello/hello.c", '#include "hello.h"\nvoid hello() { }')
+    testing.write("world.c", '#include "hello.h"\nvoid world() { hello(); }')
+    testing.configure_internal().check_returncode()
+    process = testing.cmake("host-targets", verbose=True)
+    process.check_returncode()
+    stdout = process.stdout
+    assert f'-I{testing.workspace}/hello' in stdout
+    assert '-DHELLO' in stdout
+    assert '-lhello' in stdout
+
+def test_shared_link_static_library(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(world SHARED
+      SOURCES world.c
+      LINK_LIBRARIES PRIVATE Host::hello
+    )
+    add_host_library(hello STATIC
+      SOURCES hello/hello.c
+      INCLUDE_DIRECTORIES PUBLIC hello
+    )
+    '''
+    testing.write("CMakeLists.txt", content)
+    testing.write("hello/hello.h", "void hello();")
+    testing.write("hello/hello.c", '#include "hello.h"\nvoid hello() { }')
+    testing.write("world.c", '#include "hello.h"\nvoid world() { hello(); }')
+    testing.configure_internal().check_returncode()
+    process = testing.cmake("host-targets", verbose=True)
+    process.check_returncode()
+    stdout = process.stdout
+    assert f'-I{testing.workspace}/hello' in stdout
+    assert f'{testing.build}/libhello.a' in stdout
+
+def test_shared_link_interface_library(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(world SHARED
+      SOURCES world.c
+      LINK_LIBRARIES PRIVATE Host::hello
+    )
+    add_host_library(hello INTERFACE
+      INCLUDE_DIRECTORIES PUBLIC hello
+      COMPILE_OPTIONS PUBLIC -DHELLO
+      LINK_OPTIONS PUBLIC -lm
+    )
+    '''
+    testing.write("CMakeLists.txt", content)
+    testing.write("world.c", "void world() { }")
+    testing.configure_internal().check_returncode()
+    process = testing.cmake("host-targets", verbose=True)
+    process.check_returncode()
+    stdout = process.stdout
+    assert f'-I{testing.workspace}/hello' in stdout
+    assert '-DHELLO' in stdout
+    assert '-lm' in stdout
+
+def test_shared_rpath(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_executable(main
+      SOURCES main.c
+      LINK_LIBRARIES PRIVATE Host::hello
+    )
+    add_host_library(hello SHARED SOURCES hello.c)
+    '''
+    testing.write("CMakeLists.txt", content)
+    testing.write("main.c", "int hello(); int main() { return hello(); }")
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.configure_internal().check_returncode()
+    process = testing.cmake("host-targets", verbose=True)
+    process.check_returncode()
+    assert f'-Wl,-rpath,{testing.build}' in process.stdout

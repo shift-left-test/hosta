@@ -114,6 +114,16 @@ define_property(TARGET PROPERTY HOST_INTERFACE_LINK_OPTIONS
   FULL_DOCS "List of link options for host targets"
 )
 
+define_property(TARGET PROPERTY HOST_VERSION
+  BRIEF_DOCS "Version of the host target"
+  FULL_DOCS "Version of the host target"
+)
+
+define_property(TARGET PROPERTY HOST_SOVERSION
+  BRIEF_DOCS "SO version of the host target"
+  FULL_DOCS "SO version of the host target"
+)
+
 function(get_host_target_property VARIABLE TARGET PROPERTY)
   get_host_target_name(TARGET "${TARGET}")
 
@@ -133,7 +143,7 @@ function(get_host_target_property VARIABLE TARGET PROPERTY)
 endfunction(get_host_target_property)
 
 function(get_host_target_properties TARGET)
-  set(oneValueArgs NAME OUTPUT_NAME TYPE SOURCE_DIR BINARY_DIR)
+  set(oneValueArgs NAME OUTPUT_NAME TYPE SOURCE_DIR BINARY_DIR VERSION SOVERSION)
   set(multiValueArgs SOURCES INTERFACE_INCLUDE_DIRECTORIES INTERFACE_COMPILE_OPTIONS INTERFACE_LINK_OPTIONS)
   cmake_parse_arguments(ARG "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -164,7 +174,7 @@ function(set_host_target_property TARGET PROPERTY VALUE)
 endfunction(set_host_target_property)
 
 function(set_host_target_properties TARGET)
-  set(oneValueArgs NAME OUTPUT_NAME TYPE)
+  set(oneValueArgs NAME OUTPUT_NAME TYPE VERSION SOVERSION)
   set(multiValueArgs SOURCES INTERFACE_INCLUDE_DIRECTORIES INTERFACE_COMPILE_OPTIONS INTERFACE_LINK_OPTIONS)
   cmake_parse_arguments(ARG "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -406,8 +416,14 @@ function(do_host_compile lang OUTPUT)
 endfunction(do_host_compile)
 
 function(do_host_link lang TARGET OUTPUT)
+  set(oneValueArgs TYPE VERSION SOVERSION)
   set(multiValueArgs OBJECTS LINK_LIBRARIES LINK_OPTIONS DEPENDS)
-  cmake_parse_arguments(BUILD "" "" "${multiValueArgs}" ${ARGN})
+  cmake_parse_arguments(BUILD "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  # Default type is EXECUTABLE
+  if(NOT BUILD_TYPE)
+    set(BUILD_TYPE "EXECUTABLE")
+  endif()
 
   # Set object files
   separate_arguments(BUILD_OBJECTS NATIVE_COMMAND "${BUILD_OBJECTS}")
@@ -415,34 +431,117 @@ function(do_host_link lang TARGET OUTPUT)
   # Set libraries
   transform_host_arguments(BUILD_LINK_LIBRARIES "${BUILD_LINK_LIBRARIES}" PREPEND "${CMAKE_LINK_LIBRARY_FLAG}")
 
-  # Set global linker flags
-  list(PREPEND BUILD_LINK_OPTIONS "${CMAKE_HOST_EXE_LINKER_FLAGS}")
+  if(BUILD_TYPE STREQUAL "SHARED")
+    # Set global shared linker flags
+    list(PREPEND BUILD_LINK_OPTIONS "${CMAKE_HOST_SHARED_LINKER_FLAGS}")
 
-  if(NOT CMAKE_HOST_EXECUTABLE_SUFFIX)
-    set(CMAKE_HOST_EXECUTABLE_SUFFIX "${CMAKE_HOST${lang}_EXECUTABLE_SUFFIX}")
+    # Add shared library creation flags (e.g. -shared)
+    list(PREPEND BUILD_LINK_OPTIONS "${CMAKE_HOST${lang}_SHARED_LIBRARY_CREATE_FLAGS}")
+
+    if(NOT CMAKE_HOST_SHARED_LIBRARY_PREFIX)
+      set(CMAKE_HOST_SHARED_LIBRARY_PREFIX "${CMAKE_HOST${lang}_SHARED_LIBRARY_PREFIX}")
+    endif()
+    if(NOT CMAKE_HOST_SHARED_LIBRARY_SUFFIX)
+      set(CMAKE_HOST_SHARED_LIBRARY_SUFFIX "${CMAKE_HOST${lang}_SHARED_LIBRARY_SUFFIX}")
+    endif()
+
+    # Determine output filenames based on VERSION/SOVERSION
+    set(_basename "${CMAKE_HOST_SHARED_LIBRARY_PREFIX}${TARGET}${CMAKE_HOST_SHARED_LIBRARY_SUFFIX}")
+
+    if(BUILD_VERSION)
+      set(_realname "${_basename}.${BUILD_VERSION}")
+    elseif(BUILD_SOVERSION)
+      set(_realname "${_basename}.${BUILD_SOVERSION}")
+    else()
+      set(_realname "${_basename}")
+    endif()
+
+    set(_output "${CMAKE_CURRENT_BINARY_DIR}/${_realname}")
+
+    # Add SONAME flag (prefer SOVERSION, fall back to VERSION)
+    if(BUILD_SOVERSION OR BUILD_VERSION)
+      if(BUILD_SOVERSION)
+        set(_soname "${_basename}.${BUILD_SOVERSION}")
+      else()
+        set(_soname "${_basename}.${BUILD_VERSION}")
+      endif()
+      list(APPEND BUILD_LINK_OPTIONS "${CMAKE_HOST${lang}_SHARED_LIBRARY_SONAME_FLAG}${_soname}")
+    endif()
+
+    # Link object files
+    set(BUILD_COMMAND
+      ${CMAKE_HOST${lang}_COMPILER}
+      -o ${_output}
+      ${BUILD_OBJECTS}
+      ${BUILD_LINK_LIBRARIES}
+      ${BUILD_LINK_OPTIONS}
+    )
+
+    # Build symlink commands for VERSION/SOVERSION
+    set(_symlink_commands)
+    set(_symlink_outputs)
+
+    if(BUILD_VERSION AND BUILD_SOVERSION)
+      # libhello.so.4 -> libhello.so.1.2.3
+      set(_sovername "${_basename}.${BUILD_SOVERSION}")
+      list(APPEND _symlink_commands
+        COMMAND ${CMAKE_COMMAND} -E create_symlink ${_realname} ${CMAKE_CURRENT_BINARY_DIR}/${_sovername}
+      )
+      list(APPEND _symlink_outputs ${CMAKE_CURRENT_BINARY_DIR}/${_sovername})
+      # libhello.so -> libhello.so.4
+      list(APPEND _symlink_commands
+        COMMAND ${CMAKE_COMMAND} -E create_symlink ${_sovername} ${CMAKE_CURRENT_BINARY_DIR}/${_basename}
+      )
+      list(APPEND _symlink_outputs ${CMAKE_CURRENT_BINARY_DIR}/${_basename})
+    elseif(BUILD_VERSION OR BUILD_SOVERSION)
+      # libhello.so -> libhello.so.X
+      list(APPEND _symlink_commands
+        COMMAND ${CMAKE_COMMAND} -E create_symlink ${_realname} ${CMAKE_CURRENT_BINARY_DIR}/${_basename}
+      )
+      list(APPEND _symlink_outputs ${CMAKE_CURRENT_BINARY_DIR}/${_basename})
+    endif()
+
+    add_custom_command(
+      OUTPUT ${_output} ${_symlink_outputs}
+      COMMAND ${BUILD_COMMAND}
+      ${_symlink_commands}
+      DEPENDS ${BUILD_OBJECTS} ${BUILD_DEPENDS}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Linking HOST${lang} shared library ${_realname}"
+      COMMAND_EXPAND_LISTS
+      VERBATIM
+    )
+  else()
+    # EXECUTABLE (existing behavior)
+    # Set global linker flags
+    list(PREPEND BUILD_LINK_OPTIONS "${CMAKE_HOST_EXE_LINKER_FLAGS}")
+
+    if(NOT CMAKE_HOST_EXECUTABLE_SUFFIX)
+      set(CMAKE_HOST_EXECUTABLE_SUFFIX "${CMAKE_HOST${lang}_EXECUTABLE_SUFFIX}")
+    endif()
+
+    set(_filename "${TARGET}${CMAKE_HOST_EXECUTABLE_SUFFIX}")
+    set(_output "${CMAKE_CURRENT_BINARY_DIR}/${_filename}")
+
+    # Link object files
+    set(BUILD_COMMAND
+      ${CMAKE_HOST${lang}_COMPILER}
+      -o ${_output}
+      ${BUILD_OBJECTS}
+      ${BUILD_LINK_LIBRARIES}
+      ${BUILD_LINK_OPTIONS}
+    )
+
+    add_custom_command(
+      OUTPUT ${_output}
+      COMMAND ${BUILD_COMMAND}
+      DEPENDS ${BUILD_OBJECTS} ${BUILD_DEPENDS}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Linking HOST${lang} executable ${_filename}"
+      COMMAND_EXPAND_LISTS
+      VERBATIM
+    )
   endif()
-
-  set(_filename "${TARGET}${CMAKE_HOST_EXECUTABLE_SUFFIX}")
-  set(_output "${CMAKE_CURRENT_BINARY_DIR}/${_filename}")
-
-  # Link object files
-  set(BUILD_COMMAND
-    ${CMAKE_HOST${lang}_COMPILER}
-    -o ${_output}
-    ${BUILD_OBJECTS}
-    ${BUILD_LINK_LIBRARIES}
-    ${BUILD_LINK_OPTIONS}
-  )
-
-  add_custom_command(
-    OUTPUT ${_output}
-    COMMAND ${BUILD_COMMAND}
-    DEPENDS ${BUILD_OBJECTS} ${BUILD_DEPENDS}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Linking HOST${lang} executable ${_filename}"
-    COMMAND_EXPAND_LISTS
-    VERBATIM
-  )
 
   set(${OUTPUT} ${_output} PARENT_SCOPE)
 endfunction(do_host_link)
@@ -497,6 +596,9 @@ function(add_host_executable TARGET)
     # Add static library paths as link option
     # Note: $<TARGET_PROPERTY:tgt,prop>: Non-existing libraries cause build failures
     list(APPEND _extra_link_options "$<$<BOOL:$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_STATIC>>:$<TARGET_PROPERTY:${_lib},HOST_OUTPUT_NAME>>")
+    # Add shared library link flags: -L<dir> -l<name>
+    list(APPEND _extra_link_options "$<$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_SHARED>:-L${CMAKE_CURRENT_BINARY_DIR}>")
+    list(APPEND _extra_link_options "$<$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_SHARED>:-l$<TARGET_PROPERTY:${_lib},HOST_NAME>>")
   endforeach()
 
   if(NOT BUILD_SOURCES)
@@ -539,6 +641,18 @@ function(add_host_executable TARGET)
     list(APPEND _objects ${_output})
   endforeach()
 
+  # Add RPATH for shared library dependencies
+  if(NOT CMAKE_HOST_SKIP_BUILD_RPATH)
+    foreach(_lib IN LISTS BUILD_LINK_LIBRARIES)
+      list(APPEND _extra_link_options "$<$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_SHARED>:${CMAKE_HOST${lang}_SHARED_LIBRARY_RUNTIME_FLAG}${CMAKE_CURRENT_BINARY_DIR}>")
+    endforeach()
+  endif()
+
+  # Add user-specified RPATH
+  if(CMAKE_HOST_BUILD_RPATH)
+    list(APPEND _extra_link_options "${CMAKE_HOST${lang}_SHARED_LIBRARY_RUNTIME_FLAG}${CMAKE_HOST_BUILD_RPATH}")
+  endif()
+
   # Link object files
   do_host_link(${lang} ${TARGET} _output
     OBJECTS "${_objects}"
@@ -562,8 +676,9 @@ endfunction(add_host_executable)
 
 function(add_host_library TARGET TYPE)
   set(options EXCLUDE_FROM_ALL)
+  set(oneValueArgs VERSION SOVERSION)
   set(multiValueArgs SOURCES INCLUDE_DIRECTORIES COMPILE_OPTIONS LINK_OPTIONS LINK_LIBRARIES DEPENDS)
-  cmake_parse_arguments(BUILD "${options}" "" "${multiValueArgs}" ${ARGN})
+  cmake_parse_arguments(BUILD "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Remove host namespace prefix if exists
   remove_host_namespace_prefix(TARGET "${TARGET}")
@@ -608,6 +723,11 @@ function(add_host_library TARGET TYPE)
     list(APPEND _extra_compile_options "$<TARGET_PROPERTY:${_lib},HOST_INTERFACE_COMPILE_OPTIONS>")
     list(APPEND _extra_link_options "$<TARGET_PROPERTY:${_lib},HOST_INTERFACE_LINK_OPTIONS>")
     list(APPEND _extra_dependencies "${CMAKE_HOST_TARGET_PREFIX}$<TARGET_PROPERTY:${_lib},HOST_NAME>")
+    # Add static library paths as link option
+    list(APPEND _extra_link_options "$<$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_STATIC>:$<TARGET_PROPERTY:${_lib},HOST_OUTPUT_NAME>>")
+    # Add shared library link flags: -L<dir> -l<name>
+    list(APPEND _extra_link_options "$<$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_SHARED>:-L${CMAKE_CURRENT_BINARY_DIR}>")
+    list(APPEND _extra_link_options "$<$<STREQUAL:$<TARGET_PROPERTY:${_lib},HOST_TYPE>,HOST_SHARED>:-l$<TARGET_PROPERTY:${_lib},HOST_NAME>>")
   endforeach()
 
   set(BUILD_TYPE "HOST_${TYPE}")
@@ -620,6 +740,13 @@ function(add_host_library TARGET TYPE)
     find_host_language(lang "${BUILD_SOURCES}")
     if(NOT lang)
       host_logging_error("CMake Error: Cannot determine host language for target: ${TARGET}")
+    endif()
+
+    if(NOT CMAKE_HOST_STATIC_LIBRARY_PREFIX)
+      set(CMAKE_HOST_STATIC_LIBRARY_PREFIX "${CMAKE_HOST${lang}_STATIC_LIBRARY_PREFIX}")
+    endif()
+    if(NOT CMAKE_HOST_STATIC_LIBRARY_SUFFIX)
+      set(CMAKE_HOST_STATIC_LIBRARY_SUFFIX "${CMAKE_HOST${lang}_STATIC_LIBRARY_SUFFIX}")
     endif()
 
     # Compile source files
@@ -642,13 +769,6 @@ function(add_host_library TARGET TYPE)
         INCLUDE_DIRECTORIES "${BUILD_INCLUDE_DIRECTORIES}"
         COMPILE_OPTIONS "${BUILD_COMPILE_OPTIONS}"
       )
-
-      if(NOT CMAKE_HOST_STATIC_LIBRARY_PREFIX)
-        set(CMAKE_HOST_STATIC_LIBRARY_PREFIX "${CMAKE_HOST${lang}_STATIC_LIBRARY_PREFIX}")
-      endif()
-      if(NOT CMAKE_HOST_STATIC_LIBRARY_SUFFIX)
-        set(CMAKE_HOST_STATIC_LIBRARY_SUFFIX "${CMAKE_HOST${lang}_STATIC_LIBRARY_SUFFIX}")
-      endif()
 
       do_host_compile(${lang} _output
         SOURCE "${_source}"
@@ -688,6 +808,69 @@ function(add_host_library TARGET TYPE)
       VERBATIM
     )
     add_host_custom_target("${CMAKE_HOST_NAMESPACE_PREFIX}${TARGET}" DEPENDS "${_output}")
+  elseif(BUILD_TYPE STREQUAL "HOST_SHARED")
+    if(NOT BUILD_SOURCES)
+      host_logging_error("No SOURCES given to target: ${TARGET}")
+    endif()
+
+    find_host_language(lang "${BUILD_SOURCES}")
+    if(NOT lang)
+      host_logging_error("CMake Error: Cannot determine host language for target: ${TARGET}")
+    endif()
+
+    # Add PIC compile option for shared libraries
+    if(NOT DEFINED CMAKE_HOST_POSITION_INDEPENDENT_CODE OR CMAKE_HOST_POSITION_INDEPENDENT_CODE)
+      list(PREPEND BUILD_COMPILE_OPTIONS "${CMAKE_HOST${lang}_COMPILE_OPTIONS_PIC}")
+    endif()
+
+    if(NOT CMAKE_HOST_SHARED_LIBRARY_PREFIX)
+      set(CMAKE_HOST_SHARED_LIBRARY_PREFIX "${CMAKE_HOST${lang}_SHARED_LIBRARY_PREFIX}")
+    endif()
+    if(NOT CMAKE_HOST_SHARED_LIBRARY_SUFFIX)
+      set(CMAKE_HOST_SHARED_LIBRARY_SUFFIX "${CMAKE_HOST${lang}_SHARED_LIBRARY_SUFFIX}")
+    endif()
+
+    # Compile source files
+    unset(_objects)
+
+    foreach(_source IN LISTS BUILD_SOURCES)
+      # Check if the source file exists
+      if(IS_ABSOLUTE "${_source}")
+        set(_path "${_source}")
+      else()
+        set(_path "${CMAKE_CURRENT_SOURCE_DIR}/${_source}")
+      endif()
+      if(NOT EXISTS "${_path}")
+        host_logging_error("Cannot find source file:\n  ${_source}")
+      endif()
+
+      # Resolve file dependencies
+      get_host_file_dependencies(${lang} _file_dependencies
+        SOURCE "${_source}"
+        INCLUDE_DIRECTORIES "${BUILD_INCLUDE_DIRECTORIES}"
+        COMPILE_OPTIONS "${BUILD_COMPILE_OPTIONS}"
+      )
+
+      do_host_compile(${lang} _output
+        SOURCE "${_source}"
+        TARGET "${CMAKE_HOST_SHARED_LIBRARY_PREFIX}${TARGET}${CMAKE_HOST_SHARED_LIBRARY_SUFFIX}"
+        INCLUDE_DIRECTORIES "${_global_include_directories}" "${BUILD_INCLUDE_DIRECTORIES}" "${_extra_include_directories}"
+        COMPILE_OPTIONS "${BUILD_COMPILE_OPTIONS}" "${_extra_compile_options}"
+        DEPENDS "${BUILD_DEPENDS}" "${_file_dependencies}" "${_extra_dependencies}"
+      )
+      list(APPEND _objects ${_output})
+    endforeach()
+
+    # Link shared library
+    do_host_link(${lang} ${TARGET} _output
+      TYPE SHARED
+      VERSION "${BUILD_VERSION}"
+      SOVERSION "${BUILD_SOVERSION}"
+      OBJECTS "${_objects}"
+      LINK_OPTIONS "${BUILD_LINK_OPTIONS}" "${_extra_link_options}"
+      DEPENDS "${BUILD_DEPENDS}" "${_extra_dependencies}"
+    )
+    add_host_custom_target("${CMAKE_HOST_NAMESPACE_PREFIX}${TARGET}" DEPENDS "${_output}")
   elseif(BUILD_TYPE STREQUAL "HOST_INTERFACE")
     if(BUILD_SOURCES)
       host_logging_error("add_host_library INTERFACE requires no source arguments.")
@@ -710,5 +893,7 @@ function(add_host_library TARGET TYPE)
     INTERFACE_INCLUDE_DIRECTORIES "${BUILD_INTERFACE_INCLUDE_DIRECTORIES}"
     INTERFACE_COMPILE_OPTIONS "${BUILD_INTERFACE_COMPILE_OPTIONS}"
     INTERFACE_LINK_OPTIONS "${BUILD_INTERFACE_LINK_OPTIONS}"
+    VERSION "${BUILD_VERSION}"
+    SOVERSION "${BUILD_SOVERSION}"
   )
 endfunction(add_host_library)
