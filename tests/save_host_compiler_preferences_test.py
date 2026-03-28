@@ -5,7 +5,6 @@ Copyright (c) 2024 LG Electronics Inc.
 SPDX-License-Identifier: MIT
 """
 
-import pytest
 
 content = '''
 cmake_minimum_required(VERSION 3.17 FATAL_ERROR)

@@ -5,7 +5,6 @@ Copyright (c) 2024 LG Electronics Inc.
 SPDX-License-Identifier: MIT
 """
 
-import pytest
 
 def test_host_compiler_info(testing):
     testing.configure(cpp_compiler_list="clang++")

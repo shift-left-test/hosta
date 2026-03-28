@@ -5,7 +5,6 @@ Copyright (c) 2024 LG Electronics Inc.
 SPDX-License-Identifier: MIT
 """
 
-import pytest
 
 def test_existing_target(testing):
     content = '''
