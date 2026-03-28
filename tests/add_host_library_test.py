@@ -668,3 +668,115 @@ def test_shared_rpath(testing):
     process = testing.cmake("host-targets", verbose=True)
     process.check_returncode()
     assert f'-Wl,-rpath,{testing.build}' in process.stdout
+
+def test_shared_link_options(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES hello.c LINK_OPTIONS PUBLIC -lm)
+    '''
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    assert '-lm' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_shared_cmake_host_shared_linker_flags(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    set(CMAKE_HOST_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES hello.c)
+    '''
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    assert '-Wl,--no-undefined' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_shared_disable_pic(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    set(CMAKE_HOST_POSITION_INDEPENDENT_CODE OFF)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES hello.c)
+    '''
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    assert '-fPIC' not in testing.cmake("host-targets", verbose=True).stdout
+
+def test_shared_cpp_source(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES hello.cpp)
+    '''
+    testing.write("hello.cpp", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    assert 'Linking HOSTCXX shared library libhello.so' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_static_cpp_source(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello STATIC SOURCES hello.cpp)
+    '''
+    testing.write("hello.cpp", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    assert 'Linking HOSTCXX static library libhello.a' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_executable_link_shared_library_with_link_options(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_executable(main
+      SOURCES main.c
+      LINK_LIBRARIES PRIVATE Host::hello
+    )
+    add_host_library(hello SHARED
+      SOURCES hello.c
+      LINK_OPTIONS PUBLIC -lm -lpthread
+    )
+    '''
+    testing.write("CMakeLists.txt", content)
+    testing.write("main.c", "int hello(); int main() { hello(); return 0; }")
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.configure_internal().check_returncode()
+    process = testing.cmake("host-targets", verbose=True)
+    process.check_returncode()
+    stdout = process.stdout
+    assert '-lhello' in stdout
+    assert '-lm' in stdout
+    assert '-lpthread' in stdout
+
+def test_shared_link_libraries_with_private_options(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(world SHARED
+      SOURCES world.c
+      LINK_LIBRARIES PRIVATE Host::hello
+    )
+    add_host_library(hello INTERFACE
+      INCLUDE_DIRECTORIES PRIVATE aaa
+      COMPILE_OPTIONS PRIVATE bbb
+      LINK_OPTIONS PRIVATE ccc
+    )
+    '''
+    testing.write("CMakeLists.txt", content)
+    testing.write("world.c", "void world() { }")
+    testing.configure_internal().check_returncode()
+    process = testing.cmake("host-targets", verbose=True)
+    process.check_returncode()
+    stdout = process.stdout
+    assert 'aaa' not in stdout
+    assert 'bbb' not in stdout
+    assert 'ccc' not in stdout

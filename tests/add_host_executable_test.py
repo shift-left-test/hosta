@@ -347,3 +347,60 @@ def test_build_excluded_target_by_dependency(testing):
     testing.write("world.c", "int world() { return 0; }")
     testing.configure_internal().check_returncode()
     assert 'Linking HOSTC static library libworld.a' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_cpp_source(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_executable(hello SOURCES main.cpp)
+    '''
+    testing.write("main.cpp", "int main() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    assert 'Linking HOSTCXX executable hello' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_cc_source(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_executable(hello SOURCES main.cc)
+    '''
+    testing.write("main.cc", "int main() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    assert 'Linking HOSTCXX executable hello' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_skip_build_rpath(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    set(CMAKE_HOST_SKIP_BUILD_RPATH TRUE)
+    include(cmake/HostBuild.cmake)
+    add_host_executable(main
+      SOURCES main.c
+      LINK_LIBRARIES PRIVATE Host::hello
+    )
+    add_host_library(hello SHARED SOURCES hello.c)
+    '''
+    testing.write("CMakeLists.txt", content)
+    testing.write("main.c", "int hello(); int main() { return hello(); }")
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.configure_internal().check_returncode()
+    process = testing.cmake("host-targets", verbose=True)
+    process.check_returncode()
+    assert '-Wl,-rpath,' not in process.stdout
+
+def test_custom_build_rpath(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    set(CMAKE_HOST_BUILD_RPATH "/custom/rpath")
+    include(cmake/HostBuild.cmake)
+    add_host_executable(main SOURCES main.c)
+    '''
+    testing.write("CMakeLists.txt", content)
+    testing.write("main.c", "int main() { return 0; }")
+    testing.configure_internal().check_returncode()
+    assert '-Wl,-rpath,/custom/rpath' in testing.cmake("host-targets", verbose=True).stdout

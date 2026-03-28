@@ -289,6 +289,78 @@ int main(int argc, const char* argv[]) {
 }
 '''
 
+def test_prefix(testing):
+    content_with_prefix = '''
+    cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostTest.cmake)
+    enable_testing()
+    add_host_library(unity_fixture STATIC
+      SOURCES unity.c unity_fixture.c
+      INCLUDE_DIRECTORIES PUBLIC ${CMAKE_CURRENT_LIST_DIR}
+      COMPILE_OPTIONS PUBLIC -DUNITY_FIXTURE_NO_EXTRAS
+    )
+    add_host_executable(unittest
+      SOURCES test_file.c
+      LINK_LIBRARIES PRIVATE Host::unity_fixture
+    )
+    unity_fixture_add_host_tests(Host::unittest PREFIX Hello.)
+    '''
+    test_file = '''
+    #include <unity_fixture.h>
+    TEST_GROUP(UnitTest);
+    TEST_SETUP(UnitTest) { }
+    TEST_TEAR_DOWN(UnitTest) { }
+    TEST(UnitTest, test) {
+      TEST_ASSERT_TRUE(1);
+    }
+    static void runAllTests(void) {
+      RUN_TEST_CASE(UnitTest, test);
+    }
+    int main(int argc, const char* argv[]) {
+      return UnityMain(argc, argv, runAllTests);
+    }
+    '''
+    testing.copytree("tests/project/external/unity", "")
+    testing.write("CMakeLists.txt", content_with_prefix)
+    testing.write("test_file.c", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    assert "Hello.UnitTest.test" in testing.ctest().stdout
+
+def test_multiple_test_groups(testing):
+    test_file = '''
+    #include <unity_fixture.h>
+    TEST_GROUP(GroupA);
+    TEST_SETUP(GroupA) { }
+    TEST_TEAR_DOWN(GroupA) { }
+    TEST(GroupA, test1) { TEST_ASSERT_TRUE(1); }
+    TEST(GroupA, test2) { TEST_ASSERT_TRUE(1); }
+
+    TEST_GROUP(GroupB);
+    TEST_SETUP(GroupB) { }
+    TEST_TEAR_DOWN(GroupB) { }
+    TEST(GroupB, test1) { TEST_ASSERT_TRUE(1); }
+
+    static void runAllTests(void) {
+      RUN_TEST_CASE(GroupA, test1);
+      RUN_TEST_CASE(GroupA, test2);
+      RUN_TEST_CASE(GroupB, test1);
+    }
+    int main(int argc, const char* argv[]) {
+      return UnityMain(argc, argv, runAllTests);
+    }
+    '''
+    testing.copytree("tests/project/external/unity", "")
+    testing.write("CMakeLists.txt", content)
+    testing.write("test_file.c", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    stdout = testing.ctest().stdout
+    assert "GroupA.test1" in stdout
+    assert "GroupA.test2" in stdout
+    assert "GroupB.test1" in stdout
+
 def test_enable_exact_match_with_unknown_group_name(testing):
     testing.copytree("tests/project/external/unity", "")
     testing.write("CMakeLists.txt", content)

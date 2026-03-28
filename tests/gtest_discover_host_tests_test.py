@@ -259,4 +259,4 @@ def test_with_parameterized(testing):
     testing.write("test_file.cpp", test_file)
     testing.configure_internal().check_returncode()
     testing.cmake("host-targets").check_returncode()
-    assert "SimpleValues/AddTest.add/(1,2) ...   Passed" in testing.ctest().stdout
+    assert "SimpleValues/AddTest.add/(1, 2) ...   Passed" in testing.ctest().stdout

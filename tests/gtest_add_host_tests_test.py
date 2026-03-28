@@ -172,3 +172,56 @@ def test_parameterized_works(testing):
     testing.configure_internal().check_returncode()
     testing.cmake("host-targets").check_returncode()
     assert "*/AddTest.add/* ..................   Passed" in testing.ctest().stdout
+
+def test_prefix(testing):
+    content_with_prefix = '''
+    cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostTest.cmake)
+    enable_testing()
+    add_host_library(googletest STATIC
+      SOURCES gtest-all.cc
+      INCLUDE_DIRECTORIES PUBLIC ${CMAKE_CURRENT_LIST_DIR}
+      COMPILE_OPTIONS PUBLIC -DGTEST_HAS_PTHREAD=0
+    )
+    add_host_executable(unittest
+      SOURCES test_file.cpp
+      LINK_LIBRARIES PRIVATE Host::googletest
+    )
+    gtest_add_host_tests(Host::unittest PREFIX Hello.)
+    '''
+    test_file = '''
+    #include <gtest/gtest.h>
+    TEST(Test, test) { SUCCEED(); }
+    int main(int argc, char* argv[]) {
+      ::testing::InitGoogleTest(&argc, argv);
+      return RUN_ALL_TESTS();
+    }
+    '''
+    testing.copytree("tests/project/external/gtest", "")
+    testing.write("CMakeLists.txt", content_with_prefix)
+    testing.write("test_file.cpp", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    assert "Hello.Test.test" in testing.ctest().stdout
+
+def test_multiple_test_groups(testing):
+    test_file = '''
+    #include <gtest/gtest.h>
+    TEST(GroupA, test1) { SUCCEED(); }
+    TEST(GroupA, test2) { SUCCEED(); }
+    TEST(GroupB, test1) { SUCCEED(); }
+    int main(int argc, char* argv[]) {
+      ::testing::InitGoogleTest(&argc, argv);
+      return RUN_ALL_TESTS();
+    }
+    '''
+    testing.copytree("tests/project/external/gtest", "")
+    testing.write("CMakeLists.txt", content)
+    testing.write("test_file.cpp", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    stdout = testing.ctest().stdout
+    assert "GroupA.test1" in stdout
+    assert "GroupA.test2" in stdout
+    assert "GroupB.test1" in stdout
