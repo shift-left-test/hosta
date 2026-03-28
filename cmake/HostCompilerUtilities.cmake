@@ -235,6 +235,20 @@ function(set_host_platform_default_options lang)
     endif()
   endif()
 
+  # Set default shared library soname flag
+  if(NOT CMAKE_HOST${lang}_SHARED_LIBRARY_SONAME_FLAG)
+    if(CMAKE_HOST${lang}_PLATFORM_ID STREQUAL "Linux")
+      set(CMAKE_HOST${lang}_SHARED_LIBRARY_SONAME_FLAG "-Wl,-soname," PARENT_SCOPE)
+    endif()
+  endif()
+
+  # Set default shared library runtime path flag (RPATH)
+  if(NOT CMAKE_HOST${lang}_SHARED_LIBRARY_RUNTIME_FLAG)
+    if(CMAKE_HOST${lang}_PLATFORM_ID STREQUAL "Linux")
+      set(CMAKE_HOST${lang}_SHARED_LIBRARY_RUNTIME_FLAG "-Wl,-rpath," PARENT_SCOPE)
+    endif()
+  endif()
+
   # Set default include flag prefix
   if(NOT CMAKE_INCLUDE_FLAG_HOST${lang})
     set(CMAKE_INCLUDE_FLAG_HOST${lang} "-I" PARENT_SCOPE)

@@ -27,8 +27,81 @@ include(../cmake/HostTest.cmake)
 # Enable CTest
 enable_testing()
 
+# External test frameworks
 add_subdirectory(external/unity)
 add_subdirectory(external/fff)
 add_subdirectory(external/gtest)
-add_subdirectory(calculator)
-add_subdirectory(test)
+
+# --- Expression Calculator Libraries ---
+
+# INTERFACE library: shared error types (header-only)
+add_host_library(error INTERFACE
+  INCLUDE_DIRECTORIES PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/error
+)
+
+# STATIC library: tokenizer
+add_host_library(tokenizer STATIC
+  SOURCES tokenizer/tokenizer.c
+  INCLUDE_DIRECTORIES
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tokenizer
+  LINK_LIBRARIES PUBLIC Host::error
+)
+
+# STATIC library: parser
+add_host_library(parser STATIC
+  SOURCES parser/parser.c
+  INCLUDE_DIRECTORIES
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/parser
+  LINK_LIBRARIES PUBLIC Host::tokenizer Host::error
+)
+
+# SHARED library: evaluator (demonstrates VERSION/SOVERSION)
+add_host_library(eval SHARED
+  SOURCES evaluator/evaluator.c
+  INCLUDE_DIRECTORIES
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/evaluator
+  LINK_LIBRARIES PUBLIC Host::parser Host::tokenizer Host::error
+  VERSION 1.0.0
+  SOVERSION 1
+)
+
+# Host executable: expression calculator CLI
+add_host_executable(calc
+  SOURCES calculator/main.c
+  LINK_LIBRARIES PRIVATE Host::eval Host::parser Host::tokenizer Host::error
+)
+
+# --- Tests ---
+# Note: Test targets are defined at the root level (not in test/ subdirectory)
+# because SHARED library linking requires targets to be in the same CMake scope
+# for hosta to correctly resolve library paths.
+
+# Code coverage (INTERFACE library)
+add_host_library(coverage INTERFACE
+  COMPILE_OPTIONS PUBLIC -ftest-coverage -fprofile-arcs -O0 -g
+  LINK_OPTIONS PUBLIC -fprofile-arcs
+)
+
+# Unity test: tokenizer
+add_host_executable(unity_test
+  SOURCES test/unity_test_main.c
+  LINK_LIBRARIES PRIVATE Host::tokenizer Host::error Host::unity Host::coverage
+)
+
+add_host_test(Host::unity_test)
+
+# Unity Fixture test: parser
+add_host_executable(unity_fixture_test
+  SOURCES test/unity_fixture_test_main.c
+  LINK_LIBRARIES PRIVATE Host::parser Host::tokenizer Host::error Host::unity-fixture Host::unity Host::coverage
+)
+
+unity_fixture_add_host_tests(Host::unity_fixture_test)
+
+# Google Test: evaluator + integration
+add_host_executable(google_test
+  SOURCES test/googletest_main.cpp
+  LINK_LIBRARIES PRIVATE Host::eval Host::parser Host::tokenizer Host::error Host::gtest Host::coverage
+)
+
+gtest_add_host_tests(Host::google_test)

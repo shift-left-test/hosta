@@ -365,16 +365,33 @@ The following CMake variables can be used to configure internal behaviors. `${la
 |----------|-------------|
 | `ENABLE_HOST_UNITY_FIXTURE_EXACT_MATCH` | Only run tests whose group and name exactly match the specified value. Requires `-G` and `-N` options provided by Unity fixture. Disabled by default for backward compatibility. |
 
-## Building the Sample Project
+## Sample Project
 
-To build and execute sample tests, use the following commands:
+The `sample/` directory contains an **expression calculator** that demonstrates all major hosta features in a realistic project. It parses and evaluates mathematical expressions like `"1 + 2 * (3 - 4)"`.
+
+### Features Demonstrated
+
+| Library Type | Target | Description |
+|-------------|--------|-------------|
+| `INTERFACE` | `error` | Shared error types (header-only) |
+| `STATIC` | `tokenizer`, `parser` | Static archives for tokenization and parsing |
+| `SHARED` | `eval` (VERSION 1.0.0) | Shared library with versioning and soname |
+
+Tests cover all three supported frameworks:
+- **Unity** — tokenizer unit tests (`add_host_test`)
+- **Unity Fixture** — parser tests with groups (`unity_fixture_add_host_tests`)
+- **Google Test** — evaluator and end-to-end integration tests (`gtest_add_host_tests`)
+
+### Building and Running
 
 ```bash
 cd sample
-cmake .
-make host-targets
-ctest
+cmake -S . -B build
+cmake --build build --target host-targets
+cd build && ctest --output-on-failure
 ```
+
+See [`sample/README.md`](sample/README.md) for full documentation.
 
 ## Testing the CMake Scripts
 
