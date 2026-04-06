@@ -139,11 +139,11 @@ function(get_host_target_property VARIABLE TARGET PROPERTY)
   # Try fetching host properties first
   unset(_result)
   get_target_property(_result "${TARGET}" "HOST_${PROPERTY}")
-  if(NOT _result)
+  if("${_result}" MATCHES "-NOTFOUND$")
     get_target_property(_result "${TARGET}" "${PROPERTY}")
   endif()
-  if(_result)
-    set(${VARIABLE} ${_result} PARENT_SCOPE)
+  if(NOT "${_result}" MATCHES "-NOTFOUND$")
+    set(${VARIABLE} "${_result}" PARENT_SCOPE)
   endif()
 endfunction(get_host_target_property)
 
@@ -154,10 +154,10 @@ function(get_host_target_properties TARGET)
 
   set(properties ${oneValueArgs} ${multiValueArgs})
   foreach(property IN LISTS properties)
-    if(ARG_${property})
+    if(NOT "${ARG_${property}}" STREQUAL "")
       unset(_result)
       get_host_target_property(_result ${TARGET} ${property})
-      set("${ARG_${property}}" ${_result} PARENT_SCOPE)
+      set("${ARG_${property}}" "${_result}" PARENT_SCOPE)
     endif()
   endforeach()
 endfunction(get_host_target_properties)
@@ -185,7 +185,7 @@ function(set_host_target_properties TARGET)
 
   set(properties ${oneValueArgs} ${multiValueArgs})
   foreach(property IN LISTS properties)
-    if(ARG_${property})
+    if(NOT "${ARG_${property}}" STREQUAL "")
       set_host_target_property("${TARGET}" "${property}" "${ARG_${property}}")
     endif()
   endforeach()
@@ -453,9 +453,9 @@ function(do_host_link lang TARGET OUTPUT)
     # Determine output filenames based on VERSION/SOVERSION
     set(_basename "${CMAKE_HOST_SHARED_LIBRARY_PREFIX}${TARGET}${CMAKE_HOST_SHARED_LIBRARY_SUFFIX}")
 
-    if(BUILD_VERSION)
+    if(NOT "${BUILD_VERSION}" STREQUAL "")
       set(_realname "${_basename}.${BUILD_VERSION}")
-    elseif(BUILD_SOVERSION)
+    elseif(NOT "${BUILD_SOVERSION}" STREQUAL "")
       set(_realname "${_basename}.${BUILD_SOVERSION}")
     else()
       set(_realname "${_basename}")
@@ -464,8 +464,9 @@ function(do_host_link lang TARGET OUTPUT)
     set(_output "${CMAKE_CURRENT_BINARY_DIR}/${_realname}")
 
     # Add SONAME flag (prefer SOVERSION, fall back to VERSION)
-    if(BUILD_SOVERSION OR BUILD_VERSION)
-      if(BUILD_SOVERSION)
+    # Skip on DLL platforms where soname is not applicable
+    if((NOT "${BUILD_SOVERSION}" STREQUAL "" OR NOT "${BUILD_VERSION}" STREQUAL "") AND NOT CMAKE_HOST_SHARED_LIBRARY_SUFFIX STREQUAL ".dll")
+      if(NOT "${BUILD_SOVERSION}" STREQUAL "")
         set(_soname "${_basename}.${BUILD_SOVERSION}")
       else()
         set(_soname "${_basename}.${BUILD_VERSION}")
@@ -483,10 +484,13 @@ function(do_host_link lang TARGET OUTPUT)
     )
 
     # Build symlink commands for VERSION/SOVERSION
+    # Symlinks follow the Linux .so convention; skip on DLL-based platforms
     set(_symlink_commands)
     set(_symlink_outputs)
 
-    if(BUILD_VERSION AND BUILD_SOVERSION)
+    if(CMAKE_HOST_SHARED_LIBRARY_SUFFIX STREQUAL ".dll")
+      # DLL platforms (Windows/MinGW/Cygwin) do not use soname symlink chains
+    elseif(NOT "${BUILD_VERSION}" STREQUAL "" AND NOT "${BUILD_SOVERSION}" STREQUAL "")
       # libhello.so.4 -> libhello.so.1.2.3
       set(_sovername "${_basename}.${BUILD_SOVERSION}")
       list(APPEND _symlink_commands
@@ -498,7 +502,7 @@ function(do_host_link lang TARGET OUTPUT)
         COMMAND ${CMAKE_COMMAND} -E create_symlink ${_sovername} ${CMAKE_CURRENT_BINARY_DIR}/${_basename}
       )
       list(APPEND _symlink_outputs ${CMAKE_CURRENT_BINARY_DIR}/${_basename})
-    elseif(BUILD_VERSION OR BUILD_SOVERSION)
+    elseif(NOT "${BUILD_VERSION}" STREQUAL "" OR NOT "${BUILD_SOVERSION}" STREQUAL "")
       # libhello.so -> libhello.so.X
       list(APPEND _symlink_commands
         COMMAND ${CMAKE_COMMAND} -E create_symlink ${_realname} ${CMAKE_CURRENT_BINARY_DIR}/${_basename}

@@ -52,3 +52,39 @@ def test_get_host_properties(testing):
     assert 'include_directories="interface_include_directories"' in stdout
     assert 'compile_options="interface_compile_options"' in stdout
     assert 'link_options="interface_link_options"' in stdout
+
+
+falsy_content = '''
+cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
+
+project(CMakeTest LANGUAGES NONE)
+
+include(CMakePrintHelpers)
+include(cmake/HostBuild.cmake)
+
+add_custom_target(hello COMMAND echo "hello")
+
+set_host_target_properties(hello
+  VERSION "{version}"
+  SOVERSION "{soversion}"
+)
+
+get_host_target_properties(hello
+  VERSION version
+  SOVERSION soversion
+)
+
+cmake_print_variables(version soversion)
+'''
+
+def test_set_falsy_value_zero(testing):
+    testing.write("CMakeLists.txt", falsy_content.format(version="0", soversion="0"))
+    stdout = testing.configure_internal().stdout
+    assert 'version="0"' in stdout
+    assert 'soversion="0"' in stdout
+
+def test_set_falsy_value_false(testing):
+    testing.write("CMakeLists.txt", falsy_content.format(version="FALSE", soversion="NO"))
+    stdout = testing.configure_internal().stdout
+    assert 'version="FALSE"' in stdout
+    assert 'soversion="NO"' in stdout

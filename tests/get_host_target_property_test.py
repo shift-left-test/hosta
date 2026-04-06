@@ -43,3 +43,11 @@ def test_get_host_property_single_value(testing):
 def test_get_host_property_multi_values(testing):
     testing.write("CMakeLists.txt", content.format(key="HOST_SOURCES", value="a;b;c", target="hello", property="HOST_SOURCES"))
     assert 'OUTPUT="a;b;c"' in testing.configure_internal().stdout
+
+def test_get_host_property_falsy_value_zero(testing):
+    testing.write("CMakeLists.txt", content.format(key="HOST_SOVERSION", value="0", target="hello", property="HOST_SOVERSION"))
+    assert 'OUTPUT="0"' in testing.configure_internal().stdout
+
+def test_get_host_property_falsy_value_false(testing):
+    testing.write("CMakeLists.txt", content.format(key="HOST_VERSION", value="FALSE", target="hello", property="HOST_VERSION"))
+    assert 'OUTPUT="FALSE"' in testing.configure_internal().stdout

@@ -23,8 +23,12 @@ load_host_compiler_preferences(C)
 
 # Assume that the host compiler works properly
 if(CMAKE_HOSTC_COMPILER_WORKS)
-  list(APPEND ENABLED_HOST_LANGUAGES C)
-  return()
+  if(NOT EXISTS "${CMAKE_HOSTC_COMPILER}")
+    message(WARNING "Cached HOSTC compiler '${CMAKE_HOSTC_COMPILER}' no longer exists. Re-detecting...")
+  else()
+    list(APPEND ENABLED_HOST_LANGUAGES C)
+    return()
+  endif()
 endif()
 
 include(CMakeTestCompilerCommon)

@@ -23,8 +23,12 @@ load_host_compiler_preferences(CXX)
 
 # Assume that the host compiler works properly
 if(CMAKE_HOSTCXX_COMPILER_WORKS)
-  list(APPEND ENABLED_HOST_LANGUAGES CXX)
-  return()
+  if(NOT EXISTS "${CMAKE_HOSTCXX_COMPILER}")
+    message(WARNING "Cached HOSTCXX compiler '${CMAKE_HOSTCXX_COMPILER}' no longer exists. Re-detecting...")
+  else()
+    list(APPEND ENABLED_HOST_LANGUAGES CXX)
+    return()
+  endif()
 endif()
 
 include(CMakeTestCompilerCommon)

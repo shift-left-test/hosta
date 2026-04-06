@@ -8,6 +8,7 @@ SPDX-License-Identifier: MIT
 from pathlib import Path
 import os
 import pytest
+import shlex
 import shutil
 import subprocess
 
@@ -24,7 +25,7 @@ class CMakeFixture(object):
 
     def configure_internal(self, options=[]):
         self.copytree("cmake", "cmake")
-        command = [f'cmake -S {self.workspace} -B {self.build} -DCMAKE_BINARY_DIR={self.workspace}']
+        command = [f'cmake -S {shlex.quote(self.workspace)} -B {shlex.quote(self.build)} -DCMAKE_BINARY_DIR={shlex.quote(self.workspace)}']
         return self.execute(command + options)
 
     def configure(self, build="build", testing_enabled=True, cross_toolchain=True, generator="Unix Makefiles", c_compiler_list=None, cpp_compiler_list=None, extra_options=[]):
@@ -43,7 +44,7 @@ class CMakeFixture(object):
         return self.configure_internal(options)
 
     def cmake(self, name=None, verbose=False):
-        command = [f'cmake --build {self.build}', f'--target {name}' if name else '', f'--verbose' if verbose else '']
+        command = [f'cmake --build {shlex.quote(self.build)}', f'--target {name}' if name else '', f'--verbose' if verbose else '']
         return self.execute(command)
 
     def ctest(self, args=None):
@@ -57,7 +58,7 @@ class CMakeFixture(object):
         return output
 
     def gcovr(self):
-        return self.execute(f'gcovr --root {self.workspace} --exclude ".*external.*"')
+        return self.execute(f'gcovr --root {shlex.quote(self.workspace)} --exclude ".*external.*"')
 
     def exists(self, path):
         return os.path.exists(os.path.join(self.build, path))

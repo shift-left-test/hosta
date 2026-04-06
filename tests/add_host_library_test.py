@@ -543,6 +543,35 @@ def test_shared_version_soversion(testing):
     assert testing.exists("libhello.so.4")
     assert testing.exists("libhello.so")
 
+def test_shared_soversion_zero(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES hello.c SOVERSION 0)
+    '''
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    assert testing.exists("libhello.so.0")
+    assert testing.exists("libhello.so")
+
+def test_shared_version_soversion_zero(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_library(hello SHARED SOURCES hello.c VERSION 1.0.0 SOVERSION 0)
+    '''
+    testing.write("hello.c", "int hello() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    assert testing.exists("libhello.so.1.0.0")
+    assert testing.exists("libhello.so.0")
+    assert testing.exists("libhello.so")
+
 def test_executable_link_shared_library(testing):
     content = '''
     cmake_minimum_required(VERSION 3.17)
