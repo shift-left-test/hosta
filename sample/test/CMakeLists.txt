@@ -1,12 +1,6 @@
 # Copyright (c) 2024 LG Electronics Inc.
 # SPDX-License-Identifier: MIT
 
-# Code coverage (INTERFACE library)
-add_host_library(coverage INTERFACE
-  COMPILE_OPTIONS PUBLIC -ftest-coverage -fprofile-arcs -O0 -g
-  LINK_OPTIONS PUBLIC -fprofile-arcs
-)
-
 # Unity test: tokenizer
 add_host_executable(unity_test
   SOURCES unity_test_main.c

@@ -32,6 +32,12 @@ add_subdirectory(external/unity)
 add_subdirectory(external/fff)
 add_subdirectory(external/gtest)
 
+# Code coverage (INTERFACE library)
+add_host_library(coverage INTERFACE
+  COMPILE_OPTIONS PUBLIC -ftest-coverage -fprofile-arcs -O0 -g
+  LINK_OPTIONS PUBLIC -fprofile-arcs
+)
+
 # --- Expression Calculator Libraries ---
 
 # INTERFACE library: shared error types (header-only)
@@ -44,7 +50,7 @@ add_host_library(tokenizer STATIC
   SOURCES tokenizer/tokenizer.c
   INCLUDE_DIRECTORIES
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tokenizer
-  LINK_LIBRARIES PUBLIC Host::error
+  LINK_LIBRARIES PUBLIC Host::error PRIVATE Host::coverage
 )
 
 # STATIC library: parser
@@ -52,7 +58,7 @@ add_host_library(parser STATIC
   SOURCES parser/parser.c
   INCLUDE_DIRECTORIES
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/parser
-  LINK_LIBRARIES PUBLIC Host::tokenizer Host::error
+  LINK_LIBRARIES PUBLIC Host::tokenizer Host::error PRIVATE Host::coverage
 )
 
 # SHARED library: evaluator (demonstrates VERSION/SOVERSION)
@@ -60,7 +66,7 @@ add_host_library(eval SHARED
   SOURCES evaluator/evaluator.c
   INCLUDE_DIRECTORIES
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/evaluator
-  LINK_LIBRARIES PUBLIC Host::parser Host::tokenizer Host::error
+  LINK_LIBRARIES PUBLIC Host::parser Host::tokenizer Host::error PRIVATE Host::coverage
   VERSION 1.0.0
   SOVERSION 1
 )
