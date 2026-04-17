@@ -24,3 +24,11 @@ add_host_executable(google_test
 )
 
 gtest_add_host_tests(Host::google_test)
+
+# CppUTest: tokenizer
+add_host_executable(cpputest_test
+  SOURCES cpputest_main.cpp
+  LINK_LIBRARIES PRIVATE Host::tokenizer Host::error Host::cpputest Host::coverage
+)
+
+cpputest_add_host_tests(Host::cpputest_test)

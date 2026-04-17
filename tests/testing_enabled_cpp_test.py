@@ -258,3 +258,36 @@ def test_with_prefix(testing, cross_toolchain, generator, cpp_compiler_list):
         assert "Hello.GoogleTest.test_minus" in stdout
         assert "Hello.GoogleTest.test_multiply" in stdout
         assert "Hello.GoogleTest.test_divide" in stdout
+
+@PARAM_CROSS_TOOLCHAIN
+@PARAM_GENERATORS
+@PARAM_CPP_COMPILERS
+def test_cpputest_add_host_tests(testing, cross_toolchain, generator, cpp_compiler_list):
+    testing.configure(cross_toolchain=cross_toolchain, generator=generator, cpp_compiler_list=cpp_compiler_list)
+    testing.cmake("host-targets").check_returncode()
+    if cpp_compiler_list not in ["i686-w64-mingw32-g++"]:
+        stdout = testing.ctest().stdout
+        assert 'CppUTestCalc.test_plus' in stdout
+        assert 'CppUTestCalc.test_multiply' in stdout
+        assert 'CppUTestCalc.test_divide' in stdout
+
+@PARAM_CROSS_TOOLCHAIN
+@PARAM_GENERATORS
+@PARAM_CPP_COMPILERS
+def test_cpputest_add_host_tests_with_ignored_test(testing, cross_toolchain, generator, cpp_compiler_list):
+    testing.configure(cross_toolchain=cross_toolchain, generator=generator, cpp_compiler_list=cpp_compiler_list)
+    testing.cmake("host-targets").check_returncode()
+    if cpp_compiler_list not in ["i686-w64-mingw32-g++"]:
+        assert 'CppUTestCalc.test_minus .........' in testing.ctest().stdout
+
+@PARAM_CROSS_TOOLCHAIN
+@PARAM_GENERATORS
+@PARAM_CPP_COMPILERS
+def test_cpputest_add_host_tests_with_prefix(testing, cross_toolchain, generator, cpp_compiler_list):
+    testing.configure(cross_toolchain=cross_toolchain, generator=generator, cpp_compiler_list=cpp_compiler_list, extra_options=['-DHOST_TEST_PREFIX="Hello."'])
+    testing.cmake("host-targets").check_returncode()
+    if cpp_compiler_list not in ["i686-w64-mingw32-g++"]:
+        stdout = testing.ctest().stdout
+        assert "Hello.CppUTestCalc.test_plus" in stdout
+        assert "Hello.CppUTestCalc.test_multiply" in stdout
+        assert "Hello.CppUTestCalc.test_divide" in stdout

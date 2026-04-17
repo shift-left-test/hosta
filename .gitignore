@@ -756,6 +756,7 @@ FodyWeavers.xsd
 
 # End of https://www.toptal.com/developers/gitignore/api/c,c++,python,cmake,linux,gcov,ninja,vim,emacs,visualstudio
 
+cpputest_test
 google_test
 unity_fixture_test
 unity_test

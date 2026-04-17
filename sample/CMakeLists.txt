@@ -31,6 +31,7 @@ enable_testing()
 add_subdirectory(external/unity)
 add_subdirectory(external/fff)
 add_subdirectory(external/gtest)
+add_subdirectory(external/cpputest)
 
 # Code coverage (INTERFACE library)
 add_host_library(coverage INTERFACE

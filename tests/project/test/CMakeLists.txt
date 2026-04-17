@@ -22,3 +22,12 @@ add_host_executable(google_test
 )
 
 gtest_add_host_tests(google_test PREFIX ${HOST_TEST_PREFIX})
+
+add_host_executable(cpputest_test
+  SOURCES ../calculator/calc.cpp cpputest_main.cpp
+  INCLUDE_DIRECTORIES PRIVATE ../calculator
+  LINK_LIBRARIES PRIVATE Host::cpputest Host::coverage Host::hostcxx_options
+  DEPENDS hello
+)
+
+cpputest_add_host_tests(cpputest_test PREFIX ${HOST_TEST_PREFIX})
