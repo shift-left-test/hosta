@@ -406,16 +406,52 @@ function(do_host_compile lang OUTPUT)
     -c ${BUILD_SOURCE}
   )
 
-  add_custom_command(
-    OUTPUT ${_relative_output}
-    COMMAND ${CMAKE_COMMAND} -E rm -f -- ${_relative_gcda_output}
-    COMMAND ${BUILD_COMMAND}
-    DEPENDS ${BUILD_DEPENDS}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Building HOST${lang} object ${_relative_output}"
-    COMMAND_EXPAND_LISTS
-    VERBATIM
-  )
+  # Track header/source dependencies across incremental builds.
+  # DEPFILE: compiler emits a depfile (Ninja: 3.7+, Make: 3.20+).
+  # IMPLICIT_DEPENDS: CMake scans source for #include (Make generator only).
+  if(CMAKE_GENERATOR MATCHES "Ninja" OR NOT CMAKE_VERSION VERSION_LESS 3.20)
+    # CMP0116 NEW: DEPFILE paths (and paths inside the depfile) are resolved
+    # against CMAKE_CURRENT_BINARY_DIR. Makefile/VS/Xcode generators force
+    # this regardless, but Ninja respects the policy -- so if the consuming
+    # project pins cmake_minimum_required() below 3.20, Ninja falls back to
+    # the OLD behavior (CMAKE_BINARY_DIR-relative) and the depfile written
+    # by the compiler ends up at a different path than CMake/Ninja look for,
+    # causing every build to be a spurious rebuild. Force NEW here so the
+    # two basenames always agree.
+    if(POLICY CMP0116)
+      cmake_policy(SET CMP0116 NEW)
+    endif()
+    # Keep DEPFILE, -MF and -MT all relative to CMAKE_CURRENT_BINARY_DIR --
+    # the same basis CMake uses to match depfile target strings against the
+    # custom command's OUTPUT entry; mixing bases silently breaks the
+    # depfile-to-compiler_depend.make conversion under add_subdirectory().
+    set(_relative_depfile "${_relative_output}.d")
+    list(APPEND BUILD_COMMAND -MD -MF ${_relative_depfile} -MT ${_relative_output})
+
+    add_custom_command(
+      OUTPUT ${_relative_output}
+      COMMAND ${CMAKE_COMMAND} -E rm -f -- ${_relative_gcda_output}
+      COMMAND ${BUILD_COMMAND}
+      DEPENDS ${BUILD_DEPENDS}
+      DEPFILE ${_relative_depfile}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Building HOST${lang} object ${_relative_output}"
+      COMMAND_EXPAND_LISTS
+      VERBATIM
+    )
+  else()
+    add_custom_command(
+      OUTPUT ${_relative_output}
+      COMMAND ${CMAKE_COMMAND} -E rm -f -- ${_relative_gcda_output}
+      COMMAND ${BUILD_COMMAND}
+      DEPENDS ${BUILD_DEPENDS}
+      IMPLICIT_DEPENDS ${lang} ${BUILD_SOURCE}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Building HOST${lang} object ${_relative_output}"
+      COMMAND_EXPAND_LISTS
+      VERBATIM
+    )
+  endif()
 
   set(${OUTPUT} ${_absolute_output} PARENT_SCOPE)
 endfunction(do_host_compile)

@@ -5,6 +5,9 @@ Copyright (c) 2024 LG Electronics Inc.
 SPDX-License-Identifier: MIT
 """
 
+import os
+import time
+
 
 def test_existing_target(testing):
     content = '''
@@ -404,3 +407,101 @@ def test_custom_build_rpath(testing):
     testing.write("main.c", "int main() { return 0; }")
     testing.configure_internal().check_returncode()
     assert '-Wl,-rpath,/custom/rpath' in testing.cmake("host-targets", verbose=True).stdout
+
+def test_rebuild_on_newly_included_source_change(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_executable(hello SOURCES main.c)
+    '''
+    # Initial main.c has no #include "test.c"
+    testing.write("main.c", "int main() { return 0; }")
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+
+    obj_path = os.path.join(testing.build, "CMakeFiles/HOST-hello.dir/main.c.o")
+    assert os.path.exists(obj_path)
+
+    # Add #include "test.c" and create test.c. main.c itself changes so it
+    # will be recompiled on the next build (the new include is picked up).
+    time.sleep(1)
+    testing.write("main.c", '#include "test.c"\nint main() { return test_value(); }')
+    testing.write("test.c", 'static int test_value(void) { return 0; }')
+    testing.cmake("host-targets").check_returncode()
+    mtime_after_include = os.path.getmtime(obj_path)
+
+    # Modify only test.c — main.c.o must be rebuilt because the source it
+    # includes has changed.
+    time.sleep(1)
+    testing.write("test.c", 'static int test_value(void) { return 1; }')
+    testing.cmake("host-targets").check_returncode()
+    mtime_after_test_change = os.path.getmtime(obj_path)
+
+    assert mtime_after_test_change > mtime_after_include, (
+        "main.c.o was not rebuilt after the included source test.c was modified"
+    )
+
+def test_rebuild_on_included_file_change_under_add_subdirectory(testing):
+    # Regression: with add_subdirectory(), CMAKE_CURRENT_BINARY_DIR differs
+    # from CMAKE_BINARY_DIR. Previously DEPFILE/-MT were expressed relative
+    # to CMAKE_BINARY_DIR, but CMake (per CMP0116, always NEW for Makefile
+    # generators) resolves them against CMAKE_CURRENT_BINARY_DIR -- so the
+    # depfile-to-compiler_depend.make conversion silently failed and header
+    # changes were not picked up by the build.
+    root = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_subdirectory(sub)
+    '''
+    sub = '''
+    add_host_executable(hello SOURCES main.c)
+    '''
+    testing.write("CMakeLists.txt", root)
+    testing.write("sub/CMakeLists.txt", sub)
+    testing.write("sub/main.c", '#include "test.c"\nint main(void) { return test_value(); }')
+    testing.write("sub/test.c", 'static int test_value(void) { return 0; }')
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+
+    obj_path = os.path.join(testing.build, "sub/CMakeFiles/HOST-hello.dir/main.c.o")
+    assert os.path.exists(obj_path)
+    mtime_before = os.path.getmtime(obj_path)
+
+    time.sleep(1)
+    testing.write("sub/test.c", 'static int test_value(void) { return 1; }')
+    testing.cmake("host-targets").check_returncode()
+
+    assert os.path.getmtime(obj_path) > mtime_before, (
+        "main.c.o was not rebuilt after the included source test.c was modified "
+        "(target lives under add_subdirectory())"
+    )
+
+def test_no_rebuild_when_nothing_changes(testing):
+    content = '''
+    cmake_minimum_required(VERSION 3.17)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostBuild.cmake)
+    add_host_executable(hello SOURCES main.c)
+    '''
+    testing.write("main.c", '#include "greet.h"\nint main(void) { return greet(); }')
+    testing.write("greet.h", 'static int greet(void) { return 0; }')
+    testing.write("CMakeLists.txt", content)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+
+    obj_path = os.path.join(testing.build, "CMakeFiles/HOST-hello.dir/main.c.o")
+    assert os.path.exists(obj_path)
+    mtime_before = os.path.getmtime(obj_path)
+
+    # Wait past filesystem timestamp resolution so a spurious rebuild would
+    # produce a visibly newer mtime; if the build is a no-op the mtime is
+    # preserved exactly.
+    time.sleep(1)
+    testing.cmake("host-targets").check_returncode()
+
+    assert os.path.getmtime(obj_path) == mtime_before, (
+        "main.c.o was rebuilt even though no source or header changed"
+    )
