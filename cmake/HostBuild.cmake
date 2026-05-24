@@ -408,8 +408,10 @@ function(do_host_compile lang OUTPUT)
 
   # Track header/source dependencies across incremental builds.
   # DEPFILE: compiler emits a depfile (Ninja: 3.7+, Make: 3.20+).
-  # IMPLICIT_DEPENDS: CMake scans source for #include (Make generator only).
-  if(CMAKE_GENERATOR MATCHES "Ninja" OR NOT CMAKE_VERSION VERSION_LESS 3.20)
+  # IMPLICIT_DEPENDS: honored only by Makefile generators -- CMake scans the
+  # source for #include itself.
+  if(CMAKE_GENERATOR MATCHES "Ninja" OR
+     (CMAKE_GENERATOR MATCHES "Make" AND NOT CMAKE_VERSION VERSION_LESS 3.20))
     # CMP0116 NEW: DEPFILE paths (and paths inside the depfile) are resolved
     # against CMAKE_CURRENT_BINARY_DIR. Makefile/VS/Xcode generators force
     # this regardless, but Ninja respects the policy -- so if the consuming
