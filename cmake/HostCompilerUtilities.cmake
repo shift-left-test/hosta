@@ -290,6 +290,13 @@ function(parse_host_compiler_abi_info lang bin)
   endforeach()
 endfunction(parse_host_compiler_abi_info)
 
+# NOTE: The implicit include/link directories parsed below mirror CMake's own
+# CMAKE_<LANG>_IMPLICIT_* compiler-info fields. They are persisted to the host
+# compiler preferences cache (see save_host_compiler_preferences) for parity and
+# diagnostics, and their presence is asserted by the testing_*_test.py suite.
+# They are intentionally NOT injected into the host compile/link command lines:
+# hosta invokes the compiler driver (gcc/clang) directly, which already resolves
+# its own implicit search paths, so passing them again would be redundant.
 function(parse_host_implicit_include_info lang text)
   include(CMakeParseImplicitIncludeInfo)
 
