@@ -5,9 +5,11 @@ Copyright (c) 2024 LG Electronics Inc.
 SPDX-License-Identifier: MIT
 """
 
+from functools import cached_property
 from pathlib import Path
 import os
 import pytest
+import re
 import shlex
 import shutil
 import subprocess
@@ -18,17 +20,40 @@ class CMakeFixture(object):
         self.workspace = workspace
         self.build = os.path.join(workspace, "build")
 
+    @cached_property
+    def cmake_version(self):
+        # Derive the version from the running cmake. The internal cache
+        # directory is named "${CMAKE_VERSION}-hosta.internal" by the cmake
+        # scripts, so tests must read the version from the same source rather
+        # than hardcoding it, or they break the instant CI upgrades cmake.
+        output = subprocess.run(["cmake", "--version"], capture_output=True, encoding="UTF-8").stdout
+        return re.search(r"cmake version (\S+)", output).group(1)
+
+    def internal_dir(self, path=""):
+        # hosta's own host-compiler cache: CMakeFiles/<version>-hosta.internal
+        base = f"CMakeFiles/{self.cmake_version}-hosta.internal"
+        return f"{base}/{path}" if path else base
+
+    def cmake_dir(self, path=""):
+        # Stock CMake's compiler cache: CMakeFiles/<version>
+        base = f"CMakeFiles/{self.cmake_version}"
+        return f"{base}/{path}" if path else base
+
     def execute(self, command):
         if isinstance(command, list):
-            command = " ".join(command)
+            # Drop empty entries so optional flags (rendered as "" when unset)
+            # do not introduce stray whitespace into the command line.
+            command = " ".join(arg for arg in command if arg)
         return subprocess.run(command, capture_output=True, shell=True, encoding="UTF-8")
 
-    def configure_internal(self, options=[]):
+    def configure_internal(self, options=None):
+        options = options or []
         self.copytree("cmake", "cmake")
         command = [f'cmake -S {shlex.quote(self.workspace)} -B {shlex.quote(self.build)} -DCMAKE_BINARY_DIR={shlex.quote(self.workspace)}']
         return self.execute(command + options)
 
-    def configure(self, build="build", testing_enabled=True, cross_toolchain=True, generator="Unix Makefiles", c_compiler_list=None, cpp_compiler_list=None, extra_options=[]):
+    def configure(self, build="build", testing_enabled=True, cross_toolchain=True, generator="Unix Makefiles", c_compiler_list=None, cpp_compiler_list=None, extra_options=None):
+        extra_options = extra_options or []
         self.build = os.path.join(self.workspace, build)
 
         # Copy source files to workspace

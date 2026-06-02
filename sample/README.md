@@ -16,6 +16,7 @@ The project implements an expression calculator that evaluates mathematical expr
 | `add_host_test` | Unity tokenizer test |
 | `unity_fixture_add_host_tests` | Unity Fixture parser tests |
 | `gtest_add_host_tests` | Google Test evaluator + integration tests |
+| `cpputest_add_host_tests` | CppUTest tokenizer test |
 | INTERFACE coverage library | Code coverage via compile/link options |
 | Automatic RPATH | `calc` executable finds `libeval.so` at runtime |
 
@@ -112,9 +113,11 @@ sample/
 ├── test/
 │   ├── unity_test_main.c       # Tokenizer tests (Unity)
 │   ├── unity_fixture_test_main.c # Parser tests (Unity Fixture)
-│   └── googletest_main.cpp     # Evaluator + integration (Google Test)
+│   ├── googletest_main.cpp     # Evaluator + integration (Google Test)
+│   └── cpputest_main.cpp       # Tokenizer tests (CppUTest)
 └── external/
     ├── unity/                  # Unity test framework
     ├── fff/                    # Fake Function Framework
-    └── gtest/                  # Google Test framework
+    ├── gtest/                  # Google Test framework
+    └── cpputest/               # CppUTest test framework
 ```

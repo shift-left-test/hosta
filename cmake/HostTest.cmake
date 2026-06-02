@@ -324,6 +324,10 @@ function(gtest_discover_host_tests TARGET)
     COMMAND "${CMAKE_COMMAND}"
             -D "TEST_TARGET=${CMAKE_HOST_TARGET_PREFIX}${TARGET}"
             -D "TEST_EXECUTABLE=${_output}"
+            # NOTE: the upstream GoogleTestAddTests.cmake script expects the key
+            # TEST_WORKING_DIR (not TEST_WORKING_DIRECTORY, which the Unity and
+            # CppUTest discovery scripts use). Do not rename this to match the
+            # others -- the stock CMake module reads this exact name.
             -D "TEST_WORKING_DIR=${ARG_WORKING_DIRECTORY}"
             -D "TEST_EXTRA_ARGS=${ARG_EXTRA_ARGS}"
             -D "TEST_PROPERTIES=${ARG_PROPERTIES}"

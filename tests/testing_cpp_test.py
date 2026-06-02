@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT
 
 def test_host_compiler_info(testing):
     testing.configure()
-    compiler_info = testing.read("CMakeFiles/3.28.3-hosta.internal/CMakeHOSTCXXCompiler.cmake")
+    compiler_info = testing.read(testing.internal_dir("CMakeHOSTCXXCompiler.cmake"))
     assert 'set(CMAKE_HOSTCXX_COMPILER "/usr/bin/c++")' in compiler_info
     assert 'set(CMAKE_HOSTCXX_COMPILER_ID "GNU")' in compiler_info
     assert 'set(CMAKE_HOSTCXX_COMPILER_VERSION "13.3.0")' in compiler_info

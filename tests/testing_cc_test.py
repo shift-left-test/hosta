@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT
 
 def test_host_compiler_info(testing):
     testing.configure()
-    compiler_info = testing.read("CMakeFiles/3.28.3-hosta.internal/CMakeHOSTCCompiler.cmake")
+    compiler_info = testing.read(testing.internal_dir("CMakeHOSTCCompiler.cmake"))
     assert 'set(CMAKE_HOSTC_COMPILER "/usr/bin/cc")' in compiler_info
     assert 'set(CMAKE_HOSTC_COMPILER_ID "GNU")' in compiler_info
     assert 'set(CMAKE_HOSTC_COMPILER_VERSION "13.3.0")' in compiler_info

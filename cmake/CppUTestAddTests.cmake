@@ -5,7 +5,6 @@ set(prefix "${TEST_PREFIX}")
 set(extra_args ${TEST_EXTRA_ARGS})
 set(properties ${TEST_PROPERTIES})
 set(script)
-set(suite)
 set(tests)
 
 function(add_command NAME)

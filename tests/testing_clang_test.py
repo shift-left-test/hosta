@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT
 
 def test_host_compiler_info(testing):
     testing.configure(c_compiler_list="clang")
-    compiler_info = testing.read("CMakeFiles/3.28.3-hosta.internal/CMakeHOSTCCompiler.cmake")
+    compiler_info = testing.read(testing.internal_dir("CMakeHOSTCCompiler.cmake"))
     assert 'set(CMAKE_HOSTC_COMPILER "/usr/bin/clang")' in compiler_info
     assert 'set(CMAKE_HOSTC_COMPILER_ID "Clang")' in compiler_info
     assert 'set(CMAKE_HOSTC_COMPILER_VERSION "18.1.3")' in compiler_info

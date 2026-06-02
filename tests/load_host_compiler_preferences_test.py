@@ -30,7 +30,7 @@ def test_unknown_file(testing):
 def test_load_file(testing):
     testing.write("CMakeLists.txt", content)
     testing.configure_internal()
-    testing.write("build/CMakeFiles/3.28.3-hosta.internal/CMakeHOSTXCompiler.cmake", 'set(DATA "hello")\n')
+    testing.write("build/" + testing.internal_dir("CMakeHOSTXCompiler.cmake"), 'set(DATA "hello")\n')
     assert "load_host_compiler_preferences(X): hello" in testing.configure_internal().stdout
 
 
