@@ -194,6 +194,68 @@ def test_with_ignored_tests(testing):
     testing.cmake("host-targets").check_returncode()
     assert 'Not Run (Disabled)' in testing.ctest().stdout
 
+def test_with_runtime_ignored_tests(testing):
+    test_file = '''
+    #include <unity_fixture.h>
+
+    TEST_GROUP(Test);
+    TEST_SETUP(Test) { }
+    TEST_TEAR_DOWN(Test) { }
+
+    TEST(Test, test) { TEST_IGNORE_MESSAGE("conditionally skipped"); }
+
+    static void runAllTests(void) {
+      RUN_TEST_CASE(Test, test);
+    }
+
+    int main(int argc, const char* argv[]) {
+      return UnityMain(argc, argv, runAllTests);
+    }
+    '''
+    testing.copytree("tests/project/external/unity", "")
+    testing.write("CMakeLists.txt", content)
+    testing.write("test_file.c", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    assert '***Skipped' in testing.ctest().stdout
+
+def test_with_preprocessor_excluded_tests(testing):
+    test_file = '''
+    #include <unity_fixture.h>
+
+    TEST_GROUP(Test);
+    TEST_SETUP(Test) { }
+    TEST_TEAR_DOWN(Test) { }
+
+    TEST(Test, active) { TEST_ASSERT_TRUE(1); }
+    #if 0
+    IGNORE_TEST(Test, excluded_ignore) { }
+    TEST(Test, excluded_runtime) { TEST_IGNORE(); }
+    #endif
+
+    static void runAllTests(void) {
+      RUN_TEST_CASE(Test, active);
+    #if 0
+      RUN_TEST_CASE(Test, excluded_ignore);
+      RUN_TEST_CASE(Test, excluded_runtime);
+    #endif
+    }
+
+    int main(int argc, const char* argv[]) {
+      return UnityMain(argc, argv, runAllTests);
+    }
+    '''
+    testing.copytree("tests/project/external/unity", "")
+    testing.write("CMakeLists.txt", content)
+    testing.write("test_file.c", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    out = testing.ctest().stdout
+    # discover dry-runs the binary, so #if 0-excluded tests are never registered.
+    assert "Test.active" in out
+    assert "excluded_ignore" not in out
+    assert "excluded_runtime" not in out
+
 def test_with_commented_tests(testing):
     test_file = '''
     #include <unity_fixture.h>

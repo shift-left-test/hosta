@@ -176,7 +176,7 @@ def test_with_failed_tests(testing):
     testing.cmake("host-targets").check_returncode()
     assert "Test.test ........................***Failed" in testing.ctest().stdout
 
-def test_with_disabled_tests(testing):
+def test_with_ignored_tests(testing):
     test_file = '''
     #include "CppUTest/TestHarness.h"
     #include "CppUTest/CommandLineTestRunner.h"
@@ -191,4 +191,28 @@ def test_with_disabled_tests(testing):
     testing.write("test_file.cpp", test_file)
     testing.configure_internal().check_returncode()
     testing.cmake("host-targets").check_returncode()
-    assert "Test.test ........................   Passed" in testing.ctest().stdout  # -ln cannot distinguish IGNORE_TEST, so CppUTest skips it internally and reports pass
+    # -ln can't tell IGNORE_TEST apart; it runs and reports "1 ignored" -> Skipped.
+    assert "Test.test ........................***Skipped" in testing.ctest().stdout
+
+def test_with_preprocessor_excluded_tests(testing):
+    test_file = '''
+    #include "CppUTest/TestHarness.h"
+    #include "CppUTest/CommandLineTestRunner.h"
+    TEST_GROUP(Test) { };
+    TEST(Test, active) { CHECK(true); }
+    #if 0
+    IGNORE_TEST(Test, excluded) { }
+    #endif
+    int main(int ac, char** av) {
+      return CommandLineTestRunner::RunAllTests(ac, av);
+    }
+    '''
+    testing.copytree("tests/project/external/cpputest", "")
+    testing.write("CMakeLists.txt", content)
+    testing.write("test_file.cpp", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    out = testing.ctest().stdout
+    # -ln lists tests from the binary, so #if 0-excluded tests never appear.
+    assert "Test.active" in out
+    assert "excluded" not in out

@@ -93,6 +93,127 @@ def test_disabled(testing):
     testing.cmake("host-targets").check_returncode()
     assert "UnitTest.test ....................***Not Run (Disabled)" in testing.ctest().stdout
 
+def test_ignored_at_runtime(testing):
+    test_file = '''
+    #include <unity_fixture.h>
+    TEST_GROUP(UnitTest);
+    TEST_SETUP(UnitTest) { }
+    TEST_TEAR_DOWN(UnitTest) { }
+    TEST(UnitTest, test) {
+      TEST_IGNORE_MESSAGE("conditionally skipped");
+    }
+    static void runAllTests(void) {
+      RUN_TEST_CASE(UnitTest, test);
+    }
+    int main(int argc, const char* argv[]) {
+      return UnityMain(argc, argv, runAllTests);
+    }
+    '''
+    testing.copytree("tests/project/external/unity", "")
+    testing.write("CMakeLists.txt", content)
+    testing.write("test_file.c", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    assert "UnitTest.test ....................***Skipped" in testing.ctest().stdout
+
+def test_skip_does_not_mask_failure_in_substring_mode(testing):
+    test_file = '''
+    #include <unity_fixture.h>
+    TEST_GROUP(UnitTest);
+    TEST_SETUP(UnitTest) { }
+    TEST_TEAR_DOWN(UnitTest) { }
+    TEST(UnitTest, test) { TEST_FAIL_MESSAGE("boom"); }
+    IGNORE_TEST(UnitTest, test_ignored) { }
+    static void runAllTests(void) {
+      RUN_TEST_CASE(UnitTest, test);
+      RUN_TEST_CASE(UnitTest, test_ignored);
+    }
+    int main(int argc, const char* argv[]) {
+      return UnityMain(argc, argv, runAllTests);
+    }
+    '''
+    testing.copytree("tests/project/external/unity", "")
+    testing.write("CMakeLists.txt", content)
+    testing.write("test_file.c", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    out = testing.ctest().stdout
+    # Default substring mode: "-n test" also selects "test_ignored", so the entry
+    # runs both -> "2 Tests 1 Failures 1 Ignored"; the failure must not be masked.
+    assert "***Failed" in out
+    assert "UnitTest.test ....................***Skipped" not in out
+
+def test_skip_does_not_mask_ten_failures(testing):
+    # "c" is a substring of every case, so "Group.c" runs all ten failures plus
+    # the ignored one -> "11 Tests 10 Failures 1 Ignored"; the "0 Failures" inside
+    # "10 Failures" must not trigger a skip.
+    fails = "".join(
+        'TEST(Group, c%s) { TEST_FAIL_MESSAGE("boom"); }\n    ' % s
+        for s in [""] + [str(i) for i in range(9)]
+    )
+    runs = "".join(
+        'RUN_TEST_CASE(Group, c%s);\n      ' % s
+        for s in [""] + [str(i) for i in range(9)]
+    )
+    test_file = '''
+    #include <unity_fixture.h>
+    TEST_GROUP(Group);
+    TEST_SETUP(Group) { }
+    TEST_TEAR_DOWN(Group) { }
+    %sIGNORE_TEST(Group, c_ignored) { }
+    static void runAllTests(void) {
+      %sRUN_TEST_CASE(Group, c_ignored);
+    }
+    int main(int argc, const char* argv[]) {
+      return UnityMain(argc, argv, runAllTests);
+    }
+    ''' % (fails, runs)
+    testing.copytree("tests/project/external/unity", "")
+    testing.write("CMakeLists.txt", content)
+    testing.write("test_file.c", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    out = testing.ctest().stdout
+    # Inspect the "Group.c" entry only (not Group.c0..c8 / Group.c_ignored).
+    import re
+    gc_lines = [l for l in out.splitlines() if re.search(r'Group\.c(?![0-9_])', l)]
+    assert gc_lines, "Group.c entry not found in:\n" + out
+    assert not any("Skipped" in l for l in gc_lines), \
+        "10 failures masked as Skipped:\n" + "\n".join(gc_lines)
+
+def test_preprocessor_excluded_tests_do_not_misfire_skip(testing):
+    test_file = '''
+    #include <unity_fixture.h>
+    TEST_GROUP(UnitTest);
+    TEST_SETUP(UnitTest) { }
+    TEST_TEAR_DOWN(UnitTest) { }
+    TEST(UnitTest, active) { TEST_ASSERT_TRUE(1); }
+    #if 0
+    IGNORE_TEST(UnitTest, excluded_ignore) { }
+    TEST(UnitTest, excluded_runtime) { TEST_IGNORE(); }
+    #endif
+    static void runAllTests(void) {
+      RUN_TEST_CASE(UnitTest, active);
+    #if 0
+      RUN_TEST_CASE(UnitTest, excluded_ignore);
+      RUN_TEST_CASE(UnitTest, excluded_runtime);
+    #endif
+    }
+    int main(int argc, const char* argv[]) {
+      return UnityMain(argc, argv, runAllTests);
+    }
+    '''
+    testing.copytree("tests/project/external/unity", "")
+    testing.write("CMakeLists.txt", content)
+    testing.write("test_file.c", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    out = testing.ctest().stdout
+    # add mode scans raw source (no preprocessor), so #if 0 code is still
+    # registered as ghost tests; the skip regex must not misfire on them.
+    assert "UnitTest.active" in out
+    assert "***Skipped" not in out
+
 def test_skipped(testing):
     test_file = '''
     #include <unity_fixture.h>
