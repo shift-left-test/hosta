@@ -10,7 +10,12 @@ set(tests)
 function(add_command NAME)
   set(_args "")
   foreach(_arg ${ARGN})
-    set(_args "${_args} ${_arg}")
+    # Bracket-wrap args with spaces or regex metacharacters (cf. GoogleTestAddTests.cmake).
+    if(_arg MATCHES "[^-./:a-zA-Z0-9_]")
+      set(_args "${_args} [==[${_arg}]==]")
+    else()
+      set(_args "${_args} ${_arg}")
+    endif()
   endforeach()
   set(script "${script}${NAME}(${_args})\n" PARENT_SCOPE)
 endfunction()
@@ -69,6 +74,7 @@ foreach(test_entry ${test_list})
     ${ctest_test_name}
     PROPERTIES
     WORKING_DIRECTORY "${TEST_WORKING_DIRECTORY}"
+    SKIP_REGULAR_EXPRESSION "[1-9][0-9]* ignored"
     ${properties}
   )
   list(APPEND tests "${ctest_test_name}")

@@ -113,6 +113,11 @@ function(unity_fixture_add_host_tests TARGET)
       endif()
       list(APPEND added_tests ${unity_test_name})
 
+      # Runtime-ignored tests print "0 Failures <n> Ignored" (exit 0) -> skip.
+      # Leading space stops "10 Failures" etc. from masking a real failure.
+      set_tests_properties(${ctest_test_name} PROPERTIES
+        SKIP_REGULAR_EXPRESSION " 0 Failures [1-9][0-9]* Ignored")
+
       # Make sure ignored unity tests get disabled in CTest
       if(unity_test_name IN_LIST ignored_tests)
         set_tests_properties(${ctest_test_name} PROPERTIES DISABLED TRUE)
