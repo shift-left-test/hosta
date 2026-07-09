@@ -449,6 +449,48 @@ def test_prefix(testing):
     testing.cmake("host-targets").check_returncode()
     assert "Hello.UnitTest.test" in testing.ctest().stdout
 
+def test_properties(testing):
+    content_with_properties = '''
+    cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
+    project(CMakeTest LANGUAGES NONE)
+    include(cmake/HostTest.cmake)
+    enable_testing()
+    add_host_library(unity_fixture STATIC
+      SOURCES unity.c unity_fixture.c
+      INCLUDE_DIRECTORIES PUBLIC ${CMAKE_CURRENT_LIST_DIR}
+      COMPILE_OPTIONS PUBLIC -DUNITY_FIXTURE_NO_EXTRAS
+    )
+    add_host_executable(unittest
+      SOURCES test_file.c
+      LINK_LIBRARIES PRIVATE Host::unity_fixture
+    )
+    unity_fixture_add_host_tests(Host::unittest
+      PROPERTIES ENVIRONMENT "HOSTA_TEST_ENV=hello"
+    )
+    '''
+    test_file = '''
+    #include <unity_fixture.h>
+    #include <stdlib.h>
+    TEST_GROUP(UnitTest);
+    TEST_SETUP(UnitTest) { }
+    TEST_TEAR_DOWN(UnitTest) { }
+    TEST(UnitTest, test) {
+      TEST_ASSERT_EQUAL_STRING("hello", getenv("HOSTA_TEST_ENV"));
+    }
+    static void runAllTests(void) {
+      RUN_TEST_CASE(UnitTest, test);
+    }
+    int main(int argc, const char* argv[]) {
+      return UnityMain(argc, argv, runAllTests);
+    }
+    '''
+    testing.copytree("tests/project/external/unity", "")
+    testing.write("CMakeLists.txt", content_with_properties)
+    testing.write("test_file.c", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    assert "UnitTest.test ....................   Passed" in testing.ctest().stdout
+
 def test_multiple_test_groups(testing):
     test_file = '''
     #include <unity_fixture.h>

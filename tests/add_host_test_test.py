@@ -54,6 +54,21 @@ def test_extra_args(testing):
     testing.cmake("host-targets").check_returncode()
     assert "unittest .........................   Passed" in testing.ctest().stdout
 
+def test_properties(testing):
+    test_file = '''
+    #include <stdlib.h>
+    #include <string.h>
+    int main() {
+      const char* v = getenv("HOSTA_TEST_ENV");
+      return (v && strcmp(v, "hello") == 0) ? 0 : 1;
+    }
+    '''
+    testing.write("CMakeLists.txt", content.format(extra_args='PROPERTIES ENVIRONMENT "HOSTA_TEST_ENV=hello"'))
+    testing.write("test_file.c", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    assert "unittest .........................   Passed" in testing.ctest().stdout
+
 def test_testing_disabled(testing):
     cmake = '''
     cmake_minimum_required(VERSION 3.17 FATAL_ERROR)

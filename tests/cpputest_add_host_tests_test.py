@@ -202,6 +202,28 @@ def test_multiple_test_groups(testing):
     assert "GroupA.test2" in stdout
     assert "GroupB.test1" in stdout
 
+def test_properties(testing):
+    test_file = '''
+    #include "CppUTest/TestHarness.h"
+    #include "CppUTest/CommandLineTestRunner.h"
+    #include <stdlib.h>
+    TEST_GROUP(Test) { };
+    TEST(Test, test) {
+      const char* v = getenv("HOSTA_TEST_ENV");
+      CHECK(v != NULL);
+      STRCMP_EQUAL("hello", v);
+    }
+    int main(int ac, char** av) {
+      return CommandLineTestRunner::RunAllTests(ac, av);
+    }
+    '''
+    testing.copytree("tests/project/external/cpputest", "")
+    testing.write("CMakeLists.txt", content)
+    testing.write("test_file.cpp", test_file)
+    testing.configure_internal(options=['-DEXTRA_ARGS="PROPERTIES;ENVIRONMENT;HOSTA_TEST_ENV=hello"']).check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    assert "Test.test ........................   Passed" in testing.ctest().stdout
+
 def test_run_test_multiple_times(testing):
     test_file = '''
     #include "CppUTest/TestHarness.h"

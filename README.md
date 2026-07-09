@@ -292,7 +292,7 @@ add_host_library(world STATIC
 To add an executable target as a test with CTest, use the `add_host_test` function:
 
 ```cmake
-add_host_test(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>...])
+add_host_test(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>...] [PROPERTIES <properties>...])
 ```
 
 | Parameter | Description |
@@ -300,13 +300,14 @@ add_host_test(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>...])
 | `target` | Name of the executable target created with `add_host_executable` |
 | `PREFIX` | Prefix to be prepended to the test case name |
 | `EXTRA_ARGS` | Additional arguments to pass on the command line |
+| `PROPERTIES` | Additional properties to be set on the test |
 
 ### Adding an Executable as Tests for Unity Fixture Test Macros
 
 To automatically add an executable target as tests with CTest by scanning the source code for Unity fixture test macros, use the `unity_fixture_add_host_tests` function:
 
 ```cmake
-unity_fixture_add_host_tests(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>...])
+unity_fixture_add_host_tests(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>...] [PROPERTIES <properties>...])
 ```
 
 | Parameter | Description |
@@ -314,6 +315,7 @@ unity_fixture_add_host_tests(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>
 | `target` | Name of the executable target created with `add_host_executable` |
 | `PREFIX` | Prefix to be prepended to the name of each test case |
 | `EXTRA_ARGS` | Additional arguments to pass on the command line |
+| `PROPERTIES` | Additional properties to be set on all added tests |
 
 To dynamically discover tests at CTest runtime, use the `unity_fixture_discover_host_tests` function:
 
@@ -345,7 +347,7 @@ unity_fixture_discover_host_tests(<target>
 To automatically add an executable target as tests with CTest by scanning the source code for Google Test macros, use the `gtest_add_host_tests` function:
 
 ```cmake
-gtest_add_host_tests(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>...])
+gtest_add_host_tests(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>...] [PROPERTIES <properties>...])
 ```
 
 | Parameter | Description |
@@ -353,6 +355,7 @@ gtest_add_host_tests(<target> [PREFIX <prefix>] [EXTRA_ARGS <extra_args>...])
 | `target` | Name of the executable target created with `add_host_executable` |
 | `PREFIX` | Prefix to be prepended to the name of each test case |
 | `EXTRA_ARGS` | Additional arguments to pass on the command line |
+| `PROPERTIES` | Additional properties to be set on all added tests |
 
 To dynamically discover tests at CTest runtime, use the `gtest_discover_host_tests` function:
 

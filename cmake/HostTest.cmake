@@ -18,7 +18,7 @@ function(add_host_test TARGET)
   endif()
 
   set(oneValueArgs PREFIX)
-  set(multiValueArgs EXTRA_ARGS)
+  set(multiValueArgs EXTRA_ARGS PROPERTIES)
   cmake_parse_arguments(ARG "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Remove the host namespace prefix if exists
@@ -30,6 +30,9 @@ function(add_host_test TARGET)
   )
 
   add_test(NAME ${ARG_PREFIX}${TARGET} COMMAND ${_output} ${ARG_EXTRA_ARGS})
+  if(ARG_PROPERTIES)
+    set_tests_properties(${ARG_PREFIX}${TARGET} PROPERTIES ${ARG_PROPERTIES})
+  endif()
 endfunction(add_host_test)
 
 function(unity_fixture_add_host_tests TARGET)
@@ -39,7 +42,7 @@ function(unity_fixture_add_host_tests TARGET)
   endif()
 
   set(oneValueArgs PREFIX)
-  set(multiValueArgs EXTRA_ARGS)
+  set(multiValueArgs EXTRA_ARGS PROPERTIES)
   cmake_parse_arguments(ARG "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Remove the host namespace prefix if exists
@@ -116,7 +119,8 @@ function(unity_fixture_add_host_tests TARGET)
       # Runtime-ignored tests print "0 Failures <n> Ignored" (exit 0) -> skip.
       # Leading space stops "10 Failures" etc. from masking a real failure.
       set_tests_properties(${ctest_test_name} PROPERTIES
-        SKIP_REGULAR_EXPRESSION " 0 Failures [1-9][0-9]* Ignored")
+        SKIP_REGULAR_EXPRESSION " 0 Failures [1-9][0-9]* Ignored"
+        ${ARG_PROPERTIES})
 
       # Make sure ignored unity tests get disabled in CTest
       if(unity_test_name IN_LIST ignored_tests)
@@ -221,7 +225,7 @@ function(gtest_add_host_tests TARGET)
   endif()
 
   set(oneValueArgs PREFIX)
-  set(multiValueArgs EXTRA_ARGS)
+  set(multiValueArgs EXTRA_ARGS PROPERTIES)
   cmake_parse_arguments(ARG "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Remove the host namespace prefix if exists
@@ -246,6 +250,8 @@ function(gtest_add_host_tests TARGET)
 
   # Use gtest_add_tests
   include(GoogleTest)
+  # Forward only unparsed arguments so PREFIX/EXTRA_ARGS/PROPERTIES values are
+  # not re-parsed by gtest_add_tests on top of the explicit keywords below.
   # Set TEST_PREFIX conditionally to avoid warnings on CMake 3.31.0 or later
   if(ARG_PREFIX)
     gtest_add_tests(
@@ -253,15 +259,21 @@ function(gtest_add_host_tests TARGET)
       SOURCES ${sources}
       EXTRA_ARGS ${ARG_EXTRA_ARGS}
       TEST_PREFIX ${ARG_PREFIX}
-      ${ARGN}
+      TEST_LIST added_tests
+      ${ARG_UNPARSED_ARGUMENTS}
     )
   else()
     gtest_add_tests(
       TARGET ${TARGET}
       SOURCES ${sources}
       EXTRA_ARGS ${ARG_EXTRA_ARGS}
-      ${ARGN}
+      TEST_LIST added_tests
+      ${ARG_UNPARSED_ARGUMENTS}
     )
+  endif()
+
+  if(ARG_PROPERTIES)
+    set_tests_properties(${added_tests} PROPERTIES ${ARG_PROPERTIES})
   endif()
 endfunction(gtest_add_host_tests)
 
@@ -367,7 +379,7 @@ function(cpputest_add_host_tests TARGET)
   endif()
 
   set(oneValueArgs PREFIX)
-  set(multiValueArgs EXTRA_ARGS)
+  set(multiValueArgs EXTRA_ARGS PROPERTIES)
   cmake_parse_arguments(ARG "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Remove the host namespace prefix if exists
@@ -417,6 +429,10 @@ function(cpputest_add_host_tests TARGET)
       set(ctest_test_name ${ARG_PREFIX}${cpputest_test_name})
       add_test(NAME ${ctest_test_name} COMMAND ${_output} -sg ${cpputest_test_group} -sn ${cpputest_test_case} ${ARG_EXTRA_ARGS})
       list(APPEND added_tests ${cpputest_test_name})
+
+      if(ARG_PROPERTIES)
+        set_tests_properties(${ctest_test_name} PROPERTIES ${ARG_PROPERTIES})
+      endif()
 
       if(hit MATCHES "IGNORE_TEST")
         set_tests_properties(${ctest_test_name} PROPERTIES DISABLED TRUE)

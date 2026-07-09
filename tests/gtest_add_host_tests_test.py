@@ -225,3 +225,37 @@ def test_multiple_test_groups(testing):
     assert "GroupA.test1" in stdout
     assert "GroupA.test2" in stdout
     assert "GroupB.test1" in stdout
+
+def test_properties(testing):
+    content_with_properties = content.replace(
+        "gtest_add_host_tests(Host::unittest)",
+        'gtest_add_host_tests(Host::unittest\n  PROPERTIES ENVIRONMENT "HOSTA_TEST_ENV=hello"\n)')
+    test_file = '''
+    #include <gtest/gtest.h>
+    #include <cstdlib>
+    TEST(Test, test) {
+      ASSERT_STREQ("hello", std::getenv("HOSTA_TEST_ENV"));
+    }
+    int main(int argc, char* argv[]) {
+      ::testing::InitGoogleTest(&argc, argv);
+      return RUN_ALL_TESTS();
+    }
+    '''
+    testing.copytree("tests/project/external/gtest", "")
+    testing.write("CMakeLists.txt", content_with_properties)
+    testing.write("test_file.cpp", test_file)
+    testing.configure_internal().check_returncode()
+    testing.cmake("host-targets").check_returncode()
+    assert "Test.test ........................   Passed" in testing.ctest().stdout
+
+def test_properties_with_no_tests(testing):
+    content_with_properties = content.replace(
+        "gtest_add_host_tests(Host::unittest)",
+        'gtest_add_host_tests(Host::unittest\n  PROPERTIES ENVIRONMENT "HOSTA_TEST_ENV=hello"\n)')
+    test_file = '''
+    int main() { return 0; }
+    '''
+    testing.copytree("tests/project/external/gtest", "")
+    testing.write("CMakeLists.txt", content_with_properties)
+    testing.write("test_file.cpp", test_file)
+    testing.configure_internal().check_returncode()
